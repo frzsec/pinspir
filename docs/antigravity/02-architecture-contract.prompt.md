@@ -1,6 +1,6 @@
 # Prompt Fase 02 — Architecture Contract
 
-Salin isi prompt ini ke Antigravity hanya setelah Fase 01 disetujui.
+Salin isi prompt ini ke Antigravity hanya setelah Fase 01R disetujui untuk repository yang sudah memiliki output Fase 01 lama.
 
 ---
 
@@ -14,11 +14,11 @@ Kamu bekerja di repository `finspire`. Rancang kontrak arsitektur production pil
    - `content/schema/*` dan release pilot;
    - `AGENTS.md`, `package.json`, `package-lock.json`, `next.config.ts`, dan struktur `src/`;
    - sumber proyek yang dirujuk content evidence bila diperlukan.
-2. Pastikan `docs/content/STATUS.md` berstatus `APPROVED` oleh reviewer dan tidak ada `BLOCKING` decision terbuka.
-3. Jalankan validator konten dan catat content version/hash sebagai input arsitektur.
+2. Pastikan rekonsiliasi [`01R-content-reconciliation.prompt.md`](./01R-content-reconciliation.prompt.md) sudah dijalankan, `docs/content/STATUS.md` berstatus `APPROVED` oleh reviewer, PRD DOCX tercatat sebagai sumber canonical, dan tidak ada `BLOCKING` decision terbuka.
+3. Jalankan regression test validator serta validator konten yang diperbaiki, lalu catat content version/hash sebagai input arsitektur.
 4. Jalankan `git status --short` dan identifikasi perubahan yang sudah ada.
 
-Jika approval konten belum ada atau satu hitungan canonical masih ambigu, STOP. Jangan merancang database berdasarkan tebakan.
+Jika rekonsiliasi Fase 01R belum selesai, approval konten belum ada, validator belum membuktikan fixture negatif gagal, atau satu hitungan canonical masih ambigu, STOP. Jangan merancang database berdasarkan tebakan.
 
 ## Tujuan fase
 
@@ -184,7 +184,7 @@ Set status `PROPOSED`, daftar seluruh ADR, blocking issue, dan checklist reviewe
 ## Verifikasi wajib
 
 1. Parse `openapi.v1.json` dengan Node built-in.
-2. Jalankan validator konten dari Fase 01.
+2. Jalankan regression test dan validator konten dari Fase 01R.
 3. Audit seluruh internal link, requirement ID, test ID, table/entity, endpoint, dan ADR reference.
 4. Pastikan semua invariant di shared contract muncul di architecture/test mapping.
 5. Cari kontradiksi: naming, version field, auth model, conflict status, reward semantics, timezone, dan content lifecycle.

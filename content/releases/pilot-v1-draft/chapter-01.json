@@ -1,0 +1,661 @@
+{
+  "$schema": "../../schema/content-release.schema.json",
+  "chapterId": "chapter-01",
+  "chapterIndex": 1,
+  "title": "KEEP IT ALIVE",
+  "themeCode": "PRESERVE",
+  "subtitle": "Survival & Financial Awareness",
+  "scopeExplanation": "Simulasi ini memberikan alokasi dana mandiri terbatas Rp10.000 untuk 7 hari guna melatih kepekaan membedakan kebutuhan pokok dan keinginan sesaat, menjaga cadangan, dan beradaptasi tanpa saldo minus.",
+  "prerequisites": [],
+  "learningObjectives": [
+    "LO-1.1: Membedakan Kebutuhan esensial dan Keinginan dalam situasi uang terbatas",
+    "LO-1.2: Menghitung opportunity cost dari setiap keputusan pengeluaran",
+    "LO-1.3: Menjaga sebagian uang sebagai cadangan dan adaptasi kebutuhan tak terduga tanpa saldo minus"
+  ],
+  "initialAccounts": {
+    "availableCash": 10000,
+    "goalSavings": 0,
+    "emergencyFund": 0,
+    "debt": 0,
+    "acquiredAssets": []
+  },
+  "targetIdentity": "Survivor",
+  "badge": {
+    "badgeId": "BADGE-SURVIVOR",
+    "name": "Survivor Finspire",
+    "description": "Berhasil melewati tantangan 7 hari mengelola dana mandiri terbatas tanpa saldo minus dan menyusun My 7-Day Money Survival Plan.",
+    "assetKey": "img:badge-survivor"
+  },
+  "entrypointNodeId": "CH1-SC-01",
+  "terminalNodeIds": [
+    "CH1-PASS-SURVIVOR",
+    "CH1-FAILSOFT-OVERSPENT"
+  ],
+  "scenes": [
+    {
+      "nodeId": "CH1-SC-01",
+      "dayIndex": 1,
+      "title": "Hari 1: Dahaga di Bawah Terik Siang",
+      "speaker": "Foxy",
+      "narrativeText": "Matahari siang ini terik sekali setelah jam olahraga sekolah. Tenggorokan Foxy kering dan teman-teman mengajaknya mampir ke gerai es boba kekinian seharga Rp7.000. Di saku Foxy hanya ada dana mandiri Rp10.000 untuk seminggu ke depan.",
+      "foxyState": "FX-THINKING",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH1-SCOPE",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch1-c1-boba",
+          "label": "Beli Es Boba Kekinian (-Rp7.000)",
+          "intentDescription": "Menuruti keinginan rasa manis sesaat meski menguras 70% sisa dana seminggu.",
+          "consequenceText": "Es boba terasa manis dan menyegarkan, tapi saldo Foxy langsung anjlok tersisa Rp3.000 untuk 6 hari ke depan!",
+          "pedagogicalFeedback": "Kenikmatan boba hanya berlangsung sekejap, tetapi sisa anggaran menjadi sangat kritis untuk kebutuhan wajib hari berikutnya.",
+          "foxyReactionState": "FX-WORRIED",
+          "nextNodeId": "CH1-SC-02",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -7000,
+          "stateOperations": {
+            "expense": 7000
+          },
+          "requiredConditions": {
+            "minCash": 7000
+          }
+        },
+        {
+          "choiceId": "ch1-c1-esteh",
+          "label": "Beli Es Teh Kantin Sekolah (-Rp2.500)",
+          "intentDescription": "Memilih solusi jalan tengah yang terjangkau untuk menghilangkan dahaga.",
+          "consequenceText": "Dahaga hilang dengan es teh kantin yang segar. Saldo Foxy masih tersisa Rp7.500 dalam kondisi aman.",
+          "pedagogicalFeedback": "Memilih alternatif yang lebih rasional menjaga dahaga tetap teratasi tanpa merusak anggaran mingguan.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH1-SC-02",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -2500,
+          "stateOperations": {
+            "expense": 2500
+          },
+          "requiredConditions": {
+            "minCash": 2500
+          }
+        },
+        {
+          "choiceId": "ch1-c1-airbekal",
+          "label": "Minum Air dari Botol Bekal (Rp0)",
+          "intentDescription": "Menggunakan bekal mandiri dan menahan diri dari jajan di luar.",
+          "consequenceText": "Foxy meneguk air bekalnya hingga kenyang. Haus tuntas dan saldo utuh 100% sebesar Rp10.000.",
+          "pedagogicalFeedback": "Memanfaatkan sumber daya yang sudah ada adalah pertahanan terbaik saat anggaran mandiri sedang ketat.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH1-SC-02",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH1-01",
+        "title": "Kebutuhan vs Keinginan",
+        "coreAnalogy": "Tubuh butuh cairan agar tidak dehidrasi (Kebutuhan), tetapi gula dan topping boba adalah selera tambahan (Keinginan).",
+        "keyTakeaway": "Pastikan fungsi kebutuhan dasar terpenuhi dengan biaya seefisien mungkin sebelum mengalokasikan uang ke rasa ingin."
+      },
+      "transferScenario": {
+        "questionId": "TQ-CH1-01",
+        "context": "Evaluasi Kasus Dahaga",
+        "prompt": "Riko memiliki sisa uang saku Rp15.000 untuk 3 hari ke depan. Pulang sekolah, teman-temannya mengajak beli boba diskon seharga Rp12.000. Jika Riko membeli boba tersebut, apa akibat paling tepat bagi keuangannya?",
+        "options": [
+          {
+            "optionId": "tq1-opt1",
+            "text": "Riko berhemat karena berhasil memanfaatkan diskon boba yang sedang promo.",
+            "isCorrect": false,
+            "explanation": "Diskon bukan penghematan bila barang tersebut mengorbankan anggaran kebutuhan dasar lainnya."
+          },
+          {
+            "optionId": "tq1-opt2",
+            "text": "Sisa uang Riko tinggal Rp3.000 untuk 3 hari, sehingga sangat rentan jika ada kebutuhan tugas sekolah mendadak.",
+            "isCorrect": true,
+            "explanation": "Tepat! Membeli barang keinginan saat uang saku tipis menghilangkan fleksibilitas menghadapi kebutuhan esensial mendatang."
+          },
+          {
+            "optionId": "tq1-opt3",
+            "text": "Keuangan Riko aman karena masih ada sisa uang di saku.",
+            "isCorrect": false,
+            "explanation": "Sisa Rp3.000 untuk 3 hari adalah Rp1.000/hari, posisi keuangan yang sangat berisiko."
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "CH1-SC-02",
+      "dayIndex": 2,
+      "title": "Hari 2: Iuran Fotokopi Modul Pelajaran",
+      "speaker": "Foxy",
+      "narrativeText": "Guru mata pelajaran mengumumkan tugas kelompok penting. Setiap siswa diwajibkan mengumpulkan fotokopi modul latihan seharga Rp2.000 yang akan digunakan besok pagi.",
+      "foxyState": "FX-IDLE",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH1-SCOPE",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch1-c2-bayarfotokopi",
+          "label": "Bayar Iuran Fotokopi Tepat Waktu (-Rp2.000)",
+          "intentDescription": "Memprioritaskan kewajiban belajar sekolah di atas pos jajan.",
+          "consequenceText": "Modul latihan berhasil didapat. Foxy siap belajar tanpa rasa was-was di kelas besok.",
+          "pedagogicalFeedback": "Kewajiban akademis dan kebutuhan fungsional selalu menduduki ranking prioritas tertinggi.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH1-SC-03",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -2000,
+          "stateOperations": {
+            "expense": 2000
+          },
+          "requiredConditions": {
+            "minCash": 2000
+          }
+        },
+        {
+          "choiceId": "ch1-c2-salinmanual",
+          "label": "Pinjam Modul Teman Lalu Catat Manual (Rp0)",
+          "intentDescription": "Mengganti biaya uang dengan alokasi waktu dan tenaga mencatat sendiri di buku tulis.",
+          "consequenceText": "Foxy menyalin catatan modul dengan teliti di perpustakaan. Melelahkan, tapi menghemat Rp2.000.",
+          "pedagogicalFeedback": "Bila kondisi keuangan sangat darurat, menukar tenaga sendiri untuk menekan biaya adalah strategi bertahan yang sah.",
+          "foxyReactionState": "FX-THINKING",
+          "nextNodeId": "CH1-SC-03",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH1-02",
+        "title": "Prioritas Pengeluaran Esensial",
+        "coreAnalogy": "Kebutuhan tugas sekolah seperti karcis ujian: tidak bisa ditawar jika ingin proses belajar tetap berjalan lancar.",
+        "keyTakeaway": "Selalu sisihkan cadangan untuk pengeluaran wajib yang datang tanpa jadwal pasti."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH1-SC-03",
+      "dayIndex": 3,
+      "title": "Hari 3: Jebakan Flash Sale Aksesoris",
+      "speaker": "Foxy",
+      "narrativeText": "Saat berjalan di pertokoan dekat sekolah, Foxy melihat promo gantungan kunci karakter lucu diskon 50% dari Rp8.000 menjadi Rp4.000, berlaku hanya 10 menit!",
+      "foxyState": "FX-THINKING",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH1-SCOPE",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch1-c3-tolakdiskon",
+          "label": "Lewati Promo dan Simpan Uang (Rp0)",
+          "intentDescription": "Menyadari bahwa diskon bukan alasan untuk mengeluarkan uang tanpa rencana.",
+          "consequenceText": "Foxy tersenyum dan melangkah pergi. Rasa penasaran hilang dalam beberapa menit dan cadangan saldo tetap aman.",
+          "pedagogicalFeedback": "Hebat! Mampu menahan rasa takut ketinggalan tren (FOMO) adalah kunci menjaga kelangsungan anggaran.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH1-SC-04",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          }
+        },
+        {
+          "choiceId": "ch1-c3-beligantungan",
+          "label": "Beli Gantungan Kunci Diskon (-Rp4.000)",
+          "intentDescription": "Tergoda urgensi palsu diskon pada barang yang sebenarnya tidak dibutuhkan.",
+          "consequenceText": "Gantungan kunci tergantung manis di tas Foxy, tapi dompet Foxy terasa semakin tipis untuk sisa minggu.",
+          "pedagogicalFeedback": "Membeli barang yang tidak dibutuhkan hanya karena murah tetap merupakan pemborosan dan memangkas cadangan bertahan hidup.",
+          "foxyReactionState": "FX-WORRIED",
+          "nextNodeId": "CH1-SC-04",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -4000,
+          "stateOperations": {
+            "expense": 4000
+          },
+          "requiredConditions": {
+            "minCash": 4000
+          }
+        },
+        {
+          "choiceId": "ch1-c3-lewat-karenakritis",
+          "label": "Tahan Diri karena Saldo Kritis (Rp0)",
+          "intentDescription": "Melihat saldo dompet yang sangat tipis dan memilih berdisiplin penuh.",
+          "consequenceText": "Foxy sadar uang tersisa harus dijaga untuk kebutuhan hari berikutnya. Foxy memilih langsung pulang.",
+          "pedagogicalFeedback": "Kesadaran diri atas sisa anggaran mencegah krisis finansial yang lebih fatal.",
+          "foxyReactionState": "FX-IDLE",
+          "nextNodeId": "CH1-SC-04",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH1-03",
+        "title": "Ilusi Diskon & FOMO",
+        "coreAnalogy": "Diskon 50% pada barang Rp4.000 bukanlah hemat Rp4.000, melainkan tetap keluar uang Rp4.000 dari saku.",
+        "keyTakeaway": "Sebelum membeli barang diskon, tanyakan: 'Apakah aku akan tetap membeli barang ini jika harganya normal?'"
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH1-SC-04",
+      "dayIndex": 4,
+      "title": "Hari 4: Pencatatan Pengeluaran & Pilihan Alat",
+      "speaker": "Foxy",
+      "narrativeText": "Foxy menyadari pentingnya mencatat setiap pengeluaran. Di koperasi sekolah ada buku saku mini Rp1.500. Namun Foxy juga bisa melipat kertas kalender bekas di rumah secara gratis.",
+      "foxyState": "FX-THINKING",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH1-SCOPE",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch1-c4-kertasbekas",
+          "label": "Gunakan Kertas Kalender Bekas di Rumah (Rp0)",
+          "intentDescription": "Kreatif mengoptimalkan barang sekitar tanpa mengeluarkan biaya sepeser pun.",
+          "consequenceText": "Foxy melipat kertas kalender menjadi buku saku kreasi sendiri. Hemat biaya dan fungsi pencatatan tercapai 100%!",
+          "pedagogicalFeedback": "Kreativitas memanfaatkan bahan sekitar mengamankan sisa kas tanpa mengorbankan tujuan pencatatan keuangan.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH1-SC-05",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          }
+        },
+        {
+          "choiceId": "ch1-c4-belibuku",
+          "label": "Beli Buku Saku Koperasi (-Rp1.500)",
+          "intentDescription": "Membeli buku saku praktis untuk langsung mencatat.",
+          "consequenceText": "Buku saku mini rapi digunakan. Foxy langsung menuliskan rincian uang keluar masuk.",
+          "pedagogicalFeedback": "Pencatatan adalah kebiasaan baik, namun pastikan biayanya terjangkau oleh sisa saldo saat ini.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH1-SC-05",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -1500,
+          "stateOperations": {
+            "expense": 1500
+          },
+          "requiredConditions": {
+            "minCash": 1500
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH1-04",
+        "title": "Mencatat Sebelum Menyesal",
+        "coreAnalogy": "Mengelola uang tanpa pencatatan seperti berjalan di ruangan gelap tanpa senter: rentan tersandung tanpa tahu penyebabnya.",
+        "keyTakeaway": "Catat pengeluaran kecil harian agar kita menyadari kebocoran uang yang sering tidak disadari."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH1-SC-05",
+      "dayIndex": 5,
+      "title": "Hari 5: Kebutuhan Tak Terduga - Isi Ulang Pena Habis",
+      "speaker": "Foxy",
+      "narrativeText": "Saat sedang latihan soal menjelang ulangan harian, tinta pena utama Foxy habis dan tintanya macet. Di koperasi sekolah tersedia isi ulang pena seharga Rp1.000. Foxy juga bisa meminjam pensil cadangan dari kotak pensil kelas.",
+      "foxyState": "FX-THINKING",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH1-SCOPE",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch1-c5-pinjampensil",
+          "label": "Gunakan Pensil Cadangan yang Ada (Rp0)",
+          "intentDescription": "Memanfaatkan alat tulis cadangan yang masih bisa dipakai untuk mempertahankan kas.",
+          "consequenceText": "Foxy melanjutkan latihan soal dengan pensil cadangan. Ulangan lancar dan kas tetap utuh terlindungi.",
+          "pedagogicalFeedback": "Adaptif dengan barang cadangan yang dimiliki adalah wujud nyata ketahanan finansial.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH1-SC-06",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          }
+        },
+        {
+          "choiceId": "ch1-c5-beliisiulang",
+          "label": "Beli Isi Ulang Pena di Koperasi (-Rp1.000)",
+          "intentDescription": "Membeli isi ulang pena untuk kenyamanan menulis tugas.",
+          "consequenceText": "Pena kembali menulis lancar dengan tinta baru. Tugas selesai tepat waktu.",
+          "pedagogicalFeedback": "Pengeluaran esensial bernilai kecil dapat dipenuhi jika cadangan kas dari hari-hari sebelumnya dijaga dengan baik.",
+          "foxyReactionState": "FX-IDLE",
+          "nextNodeId": "CH1-SC-06",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -1000,
+          "stateOperations": {
+            "expense": 1000
+          },
+          "requiredConditions": {
+            "minCash": 1000
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH1-05",
+        "title": "Menjaga Cadangan untuk Hal Tak Terduga",
+        "coreAnalogy": "Cadangan uang seperti ban serep di kendaraan: jarang dipikirkan saat jalan mulus, tapi sangat menentukan saat terjadi kendala.",
+        "keyTakeaway": "Jangan habiskan seluruh uang saku di awal pekan agar selalu siap menghadapi kebutuhan mendadak."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH1-SC-06",
+      "dayIndex": 6,
+      "title": "Hari 6: Ujian Akhir Pekan - Hiburan Rekreasi",
+      "speaker": "Foxy",
+      "narrativeText": "Hari Sabtu siang tiba setelah jam sekolah usai. Teman-teman sekelas mengajak Foxy menyewa rental game konsol seharga Rp3.000. Foxy juga punya alternatif mengajak teman bermain catur di teras sekolah secara gratis.",
+      "foxyState": "FX-THINKING",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH1-SCOPE",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch1-c6-maincatur",
+          "label": "Ajak Teman Main Catur di Teras Sekolah (Rp0)",
+          "intentDescription": "Menikmati kebersamaan pertemanan tanpa harus mengeluarkan biaya sewa.",
+          "consequenceText": "Pertandingan catur berlangsung seru dan penuh tawa! Foxy bersenang-senang bersama teman tanpa mengurangi kas sepeser pun.",
+          "pedagogicalFeedback": "Hiburan berkualitas tidak selalu harus berbayar mahal jika kita kreatif mencari alternatif aktivitas sosial.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH1-SC-07",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          }
+        },
+        {
+          "choiceId": "ch1-c6-sewagame",
+          "label": "Ikut Sewa Rental Game (-Rp3.000)",
+          "intentDescription": "Memilih hiburan digital berbayar dengan memanfaatkan sisa saldo yang cukup.",
+          "consequenceText": "Permainan konsol sangat seru, namun saldo Foxy terpotong menjelang hari evaluasi terakhir.",
+          "pedagogicalFeedback": "Boleh berekreasi bila saldo masih memiliki bantalan aman, tetapi sadari dampaknya pada total cadangan sisa pekan.",
+          "foxyReactionState": "FX-THINKING",
+          "nextNodeId": "CH1-SC-07",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -3000,
+          "stateOperations": {
+            "expense": 3000
+          },
+          "requiredConditions": {
+            "minCash": 3000
+          }
+        },
+        {
+          "choiceId": "ch1-c6-tolak-hemat",
+          "label": "Tolak Sewa dan Beristirahat Membaca Buku (Rp0)",
+          "intentDescription": "Menjaga saldo tetap utuh dan beristirahat tenang di rumah.",
+          "consequenceText": "Foxy beristirahat membaca buku di rumah. Pikiran tenang dan kas tetap aman terjaga.",
+          "pedagogicalFeedback": "Memprioritaskan ketenangan pikiran dan keamanan saku adalah keputusan yang bijaksana.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH1-SC-07",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH1-06",
+        "title": "Sosialisasi Tanpa Boncos",
+        "coreAnalogy": "Pertemanan sejati menghargai kehadiran dan kebersamaan, bukan seberapa banyak uang yang dibakar bersama.",
+        "keyTakeaway": "Jangan ragu mengusulkan alternatif kumpul yang ramah kantong kepada sahabat sebaya."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH1-SC-07",
+      "dayIndex": 7,
+      "title": "Hari 7: Evaluasi 7 Hari & Menuju Boss Project",
+      "speaker": "Foxy",
+      "narrativeText": "Hari ke-7 tiba! Foxy membuka catatan mingguan dan memeriksa sisa dana mandirinya. Seluruh pengeluaran tercatat rapi dan Foxy bersiap menyusun My 7-Day Money Survival Plan sebagai bukti mastery.",
+      "foxyState": "FX-HAPPY",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH1-SCOPE",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch1-c7-menuju-pass",
+          "label": "Serahkan My 7-Day Money Survival Plan (Saldo Kas Memadai >= Rp1.000)",
+          "intentDescription": "Mengunci evaluasi minggu pertama dengan saldo non-negatif yang aman dan menyusun dokumen rencana survival.",
+          "consequenceText": "Foxy berhasil melewati 7 hari dengan selamat! Dokumen Survival Plan siap diuji melalui skenario transfer kasus baru.",
+          "pedagogicalFeedback": "Luar biasa! Kamu telah membuktikan bahwa dengan membedakan kebutuhan dan mengendalikan godaan sesaat, anggaran mandiri terbatas dapat dikelola dengan tertib.",
+          "foxyReactionState": "FX-CELEBRATE",
+          "nextNodeId": "CH1-PASS-SURVIVOR",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          },
+          "requiredConditions": {
+            "minCash": 1000
+          }
+        },
+        {
+          "choiceId": "ch1-c7-menuju-failsoft",
+          "label": "Tinjau Ulang Pola Pengeluaran Kritis (Sisa Saldo di Bawah Rp1.000)",
+          "intentDescription": "Menyadari bahwa keputusan-keputusan sebelumnya terlalu boros dan membutuhkan sesi bimbingan Foxy.",
+          "consequenceText": "Foxy mendengarkan dengan penuh empati. Kegagalan kali ini adalah batu loncatan berharga untuk menyusun strategi yang lebih disiplin!",
+          "pedagogicalFeedback": "Mengakui kelemahan adalah langkah awal perbaikan. Pelajari pola pengeluaranmu dan coba lagi tanpa rasa bersalah.",
+          "foxyReactionState": "FX-SAD",
+          "nextNodeId": "CH1-FAILSOFT-OVERSPENT",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          },
+          "requiredConditions": {
+            "maxCash": 999
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH1-07",
+        "title": "Refleksi Otot Finansial",
+        "coreAnalogy": "7 hari bertahan dengan uang terbatas adalah latihan ketahanan otot finansial sebelum nantinya mengelola jumlah yang lebih besar.",
+        "keyTakeaway": "Kemampuan mengendalikan uang saku kecil adalah fondasi utama sebelum mengelola penghasilan mandiri."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH1-PASS-SURVIVOR",
+      "dayIndex": 7,
+      "title": "Mastery Gate: Gelar Survivor Terkunci",
+      "speaker": "Foxy",
+      "narrativeText": "Selamat! Foxy berhasil mempertahankan saldo non-negatif selama 7 hari, menyelesaikan kebutuhan pokok sekolah, menyusun My 7-Day Money Survival Plan, dan membuktikan pemahaman pada kasus transfer baru. Identitas Survivor resmi diraih!",
+      "foxyState": "FX-CELEBRATE",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH1-SCOPE",
+      "isTerminal": true,
+      "terminalType": "pass",
+      "producedOutcomeTags": [
+        "OUTCOME_PRESERVED_RESERVE",
+        "OUTCOME_DISCIPLINED_SURVIVOR"
+      ],
+      "choices": []
+    },
+    {
+      "nodeId": "CH1-FAILSOFT-OVERSPENT",
+      "dayIndex": 7,
+      "title": "Fail-Soft: Pelajaran Berharga dari Pemborosan",
+      "speaker": "Foxy",
+      "narrativeText": "Dana mandiri Foxy terkuras habis sebelum pekan berakhir akibat pengeluaran impulsif di awal hari. Foxy duduk bersama untuk merefleksikan catatan pengeluaran tanpa rasa malu. Ini adalah simulasi yang aman untuk belajar bangkit!",
+      "foxyState": "FX-SAD",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH1-SCOPE",
+      "isTerminal": true,
+      "terminalType": "fail_soft",
+      "producedOutcomeTags": [
+        "OUTCOME_FAILSOFT_REVIEWED"
+      ],
+      "choices": []
+    }
+  ],
+  "miniGame": {
+    "gameId": "MG-SORTIR-CEPAT",
+    "title": "Sortir Cepat: Kebutuhan vs Keinginan",
+    "gameType": "categorization",
+    "concept": "Klasifikasi cepat pos pengeluaran remaja ke dalam kategori Kebutuhan, Keinginan, dan Tabungan Cadangan.",
+    "timeLimitSeconds": 60,
+    "passThresholdPercent": 80,
+    "accessibleInputSupported": true,
+    "items": [
+      {
+        "itemId": "item-01",
+        "name": "Iuran Fotokopi Modul Sekolah",
+        "category": "Kebutuhan",
+        "explanation": "Diperlukan langsung untuk kelancaran kegiatan belajar mengajar."
+      },
+      {
+        "itemId": "item-02",
+        "name": "Boba Brown Sugar Ekstra Jelly",
+        "category": "Keinginan",
+        "explanation": "Camilan manis penambah selera yang dapat ditunda atau diganti air bekal."
+      },
+      {
+        "itemId": "item-03",
+        "name": "Paket Kuota Data untuk Tugas Daring",
+        "category": "Kebutuhan",
+        "explanation": "Akses internet esensial untuk mengunggah tugas sekolah."
+      },
+      {
+        "itemId": "item-04",
+        "name": "Top-up Skin Senjata Game Online",
+        "category": "Keinginan",
+        "explanation": "Hanya mempercantik visual game tanpa pengaruh pada fungsi kehidupan nyata."
+      },
+      {
+        "itemId": "item-05",
+        "name": "Uang Cadangan di Celengan Bambu",
+        "category": "Tabungan",
+        "explanation": "Dana yang disisihkan di awal untuk keamanan masa depan."
+      },
+      {
+        "itemId": "item-06",
+        "name": "Ongkos Angkutan Umum ke Sekolah",
+        "category": "Kebutuhan",
+        "explanation": "Transportasi esensial untuk sampai di tempat belajar tepat waktu."
+      },
+      {
+        "itemId": "item-07",
+        "name": "Sepatu Branded Edisi Terbatas",
+        "category": "Keinginan",
+        "explanation": "Dorongan gengsi sosial di atas fungsi utama sepatu yang masih layak pakai."
+      },
+      {
+        "itemId": "item-08",
+        "name": "Alat Tulis Pulpen dan Penggaris",
+        "category": "Kebutuhan",
+        "explanation": "Alat kerja dasar harian siswa di kelas."
+      },
+      {
+        "itemId": "item-09",
+        "name": "Nonton Bioskop Akhir Pekan",
+        "category": "Keinginan",
+        "explanation": "Hiburan rekreasi yang perlu disesuaikan dengan ketersediaan dana sisa."
+      },
+      {
+        "itemId": "item-10",
+        "name": "Setoran Tabungan Target Usaha",
+        "category": "Tabungan",
+        "explanation": "Alokasi terencana untuk mewujudkan cita-cita mandiri."
+      }
+    ]
+  },
+  "bossChallenge": {
+    "bossId": "BOSS-CH1-SURVIVAL",
+    "title": "My 7-Day Money Survival Plan",
+    "scenario": "Bantu Foxy merancang My 7-Day Money Survival Plan dengan dana mandiri Rp10.000 saat menghadapi situasi tak terduga. Saldo akhir tidak boleh minus dan seluruh tugas sekolah harus terselesaikan.",
+    "criteria": "Menyusun artefak survival terstruktur, menjaga saldo non-negatif, dan menerapkan rencana pada skenario transfer kasus baru.",
+    "maxAttemptsBeforeSupportHint": 3,
+    "rewardPolicyKey": "REWARD-BOSS-CH1-SURVIVOR",
+    "masteryArtifact": {
+      "artifactId": "ARTIFACT-CH1-SURVIVAL-PLAN",
+      "artifactName": "My 7-Day Money Survival Plan",
+      "documentTitle": "Rencana Bertahan Hidup Finansial 7 Hari Foxy",
+      "sections": [
+        {
+          "sectionId": "sec-resource",
+          "title": "Alokasi Sumber Daya Dasar",
+          "fields": [
+            {
+              "fieldId": "total_money",
+              "label": "Jumlah Uang yang Dimiliki",
+              "fieldType": "integer_currency",
+              "expectedContentRule": "10000"
+            },
+            {
+              "fieldId": "reserve_target",
+              "label": "Jumlah Uang yang Harus Tetap Disimpan",
+              "fieldType": "integer_currency",
+              "expectedContentRule": ">= 2000"
+            }
+          ]
+        },
+        {
+          "sectionId": "sec-priorities",
+          "title": "Klasifikasi Kebutuhan vs Keinginan",
+          "fields": [
+            {
+              "fieldId": "core_needs",
+              "label": "Kebutuhan Utama",
+              "fieldType": "text_list",
+              "expectedContentRule": "min 2 pos pengeluaran esensial"
+            },
+            {
+              "fieldId": "wants_delayed",
+              "label": "Keinginan yang Dibatasi/Ditunda",
+              "fieldType": "text_list",
+              "expectedContentRule": "min 2 pos godaan konsumtif"
+            }
+          ]
+        },
+        {
+          "sectionId": "sec-limits",
+          "title": "Batas Belanja & Protokol Tak Terduga",
+          "fields": [
+            {
+              "fieldId": "spending_limit",
+              "label": "Batas Pengeluaran Maksimum per Hari",
+              "fieldType": "integer_currency",
+              "expectedContentRule": "<= 2000"
+            },
+            {
+              "fieldId": "unforeseen_action",
+              "label": "Tindakan Jika Terjadi Kebutuhan Tak Terduga",
+              "fieldType": "text_short",
+              "expectedContentRule": "Gunakan pos cadangan sebelum mengorbankan kebutuhan esensial"
+            }
+          ]
+        }
+      ]
+    },
+    "evaluationRubric": [
+      {
+        "dimension": "Integritas Saldo Non-Negatif",
+        "passCondition": "Saldo simulasi akhir minggu berada pada rentang >= Rp0 tanpa defisit kas.",
+        "weight": 40
+      },
+      {
+        "dimension": "Kelengkapan Struktur Artefak",
+        "passCondition": "Seluruh 6 field dokumen My 7-Day Money Survival Plan terisi lengkap sesuai aturan konten.",
+        "weight": 35
+      },
+      {
+        "dimension": "Penerapan pada Skenario Transfer",
+        "passCondition": "Mampu memilih keputusan tepat pada skenario kasus baru berdasarkan prinsip survival plan.",
+        "weight": 25
+      }
+    ],
+    "transferApplicationScenario": {
+      "scenarioId": "SCEN-CH1-TRANSFER-APPLY",
+      "title": "Uji Penerapan Kasus Baru: Uang Saku Doni",
+      "newCasePrompt": "Doni memiliki sisa uang saku Rp20.000 untuk 5 hari. Di hari ke-2, sol sepatu sekolahnya robek dan butuh lem Rp5.000, sementara temannya mengajak beli skin game diskon Rp15.000. Berdasarkan prinsip Survival Plan, apa tindakan Doni?",
+      "evaluationRule": "Memprioritaskan lem sepatu dari dana cadangan dan menolak skin game demi menjaga kelangsungan 4 hari berikutnya."
+    }
+  }
+}

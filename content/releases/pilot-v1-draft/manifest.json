@@ -1,0 +1,56 @@
+{
+  "$schema": "../../schema/content-release.schema.json",
+  "schemaVersion": "2026.09-v1",
+  "releaseId": "pilot-v1-draft",
+  "status": "proposed",
+  "locale": "id-ID",
+  "title": "Finspire Production Pilot Content Release",
+  "description": "Paket konten executable draft untuk pilot sosialisasi sekolah yang memuat Chapter 1 (KEEP IT ALIVE) dan Chapter 2 (PAY YOURSELF FIRST) lengkap dengan scene graph terstruktur, konservasi saldo matematis, transfer scenarios, dan mastery artifacts.",
+  "publishedAt": null,
+  "chapterFiles": [
+    "chapter-01.json",
+    "chapter-02.json"
+  ],
+  "rewardPolicies": {
+    "REWARD-STORY-SCENE-STANDARD": {
+      "xp": 10,
+      "coin": 5,
+      "rule": "once_per_node"
+    },
+    "REWARD-MICROLEARNING-CARD": {
+      "xp": 5,
+      "coin": 0,
+      "rule": "once_per_node"
+    },
+    "REWARD-MINIGAME-PASS": {
+      "xp": 25,
+      "coin": 10,
+      "rule": "first_pass_only"
+    },
+    "REWARD-BOSS-CH1-SURVIVOR": {
+      "xp": 50,
+      "coin": 30,
+      "badgeId": "BADGE-SURVIVOR",
+      "rule": "first_pass_only"
+    },
+    "REWARD-BOSS-CH2-PLANNER": {
+      "xp": 50,
+      "coin": 30,
+      "badgeId": "BADGE-PLANNER",
+      "rule": "first_pass_only"
+    }
+  },
+  "assetDictionary": [
+    "anim:foxy-idle",
+    "anim:foxy-thinking",
+    "anim:foxy-happy",
+    "anim:foxy-worried",
+    "anim:foxy-sad",
+    "anim:foxy-celebrate",
+    "anim:foxy-levelup",
+    "img:badge-survivor",
+    "img:badge-planner",
+    "img:cover-chapter-01",
+    "img:cover-chapter-02"
+  ]
+}

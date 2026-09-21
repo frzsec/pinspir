@@ -16,20 +16,25 @@ Jika sumber bertentangan, gunakan urutan berikut:
 
 1. Keputusan terbaru pengguna yang tertulis dan approval gate.
 2. Kontrak bersama ini serta ADR/content release yang sudah berstatus `APPROVED`.
-3. `../Finspire UIUX Storyboard Interaction Spec v1.0.pdf` sebagai kontrak alur layar/interaksi.
-4. `../prdterbaru.md` untuk visi, fitur, roadmap, dan baseline domain.
-5. `../REFERENSI PRESENTASI & PENJELASAN IDE.md` untuk batas klaim dan inkonsistensi yang sudah diketahui.
-6. `../FINSPIRE PRESENTATION.pdf` dan guideline lomba sebagai konteks presentasi/bisnis.
-7. Kode dan lockfile aktual sebagai kebenaran versi teknis yang terpasang.
+3. `../PRD Finspire v3.0.docx` sebagai sumber canonical visi produk, desain chapter, mastery, artifact, identity progression, dan persistent story.
+4. `../Finspire UIUX Storyboard Interaction Spec v1.0.pdf` sebagai kontrak alur layar/interaksi; dokumen ini tidak boleh mengubah makna chapter canonical.
+5. `../prdterbaru.md` sebagai mirror Markdown dari PRD canonical agar mudah dibaca agent.
+6. `../REFERENSI PRESENTASI & PENJELASAN IDE.md` untuk batas klaim dan inkonsistensi yang sudah diketahui.
+7. `../FINSPIRE PRESENTATION.pdf` dan guideline lomba sebagai konteks presentasi/bisnis.
+8. Kode dan lockfile aktual sebagai kebenaran versi teknis yang terpasang.
 
-Storyboard bukan naskah cerita final. Dokumen itu sendiri menyebut detail scene per hari/episode perlu dibuat di story script terpisah. Jangan mengubah ringkasan menjadi fakta final tanpa label asumsi dan approval.
+Jika DOCX dan mirror Markdown berbeda secara material, DOCX menang dan perbedaannya wajib dilaporkan. Storyboard bukan naskah cerita final. Dokumen itu sendiri menyebut detail scene per hari/episode perlu dibuat di story script terpisah. Jangan mengubah ringkasan menjadi fakta final tanpa label asumsi dan approval.
+
+PRD canonical masih dapat memiliki konflik internal. Khususnya, jangan diam-diam menebak penyelesaian konflik Chapter 5 vs roadmap, lima chapter vs level/data model empat chapter, mastery unlock vs streak unlock, aktivitas Chapter 4 di dunia nyata vs simulasi, atau angka Chapter 2 yang belum direkonsiliasi. Catat sebagai decision/gap sampai disetujui.
+
+Contoh versi teknologi, format aset, layanan SaaS, atau mekanisme identitas di PRD tidak mengalahkan keputusan pengguna terbaru, kontrak ini, dan kondisi repository. Baseline implementasi tetap offline-first, tanpa layanan berbayar, self-hosted bila layak, identitas pseudonim untuk pilot, dan kontrak maskot WebM transparan.
 
 Spreadsheet survei mentah di parent directory mengandung data pribadi. **DILARANG** menyalin, mengimpor, seed, commit, atau mencetak isinya ke log. Hanya statistik agregat yang sudah disetujui boleh digunakan.
 
 ## 3. Baseline teknis
 
 - Repository: Next.js App Router, TypeScript strict, React, Tailwind, Zustand, Motion.
-- Ikuti versi nyata di `package.json`/lockfile; saat kontrak ini dibuat Next.js adalah 16.3.5, bukan versi 15 yang tertulis di PRD lama.
+- Ikuti versi nyata di `package.json`/lockfile; saat kontrak ini dibuat Next.js adalah 16.3.5, bukan contoh versi 15 yang masih tertulis di PRD canonical.
 - Baca `AGENTS.md` dan dokumentasi Next.js lokal yang dirujuknya sebelum mengubah kode framework.
 - Server tetap di aplikasi Next.js melalui Route Handlers untuk API versioned `/api/v1`. Jangan menambah server Express terpisah tanpa ADR baru.
 - PostgreSQL adalah canonical source of truth. Gunakan Drizzle ORM dan migrasi version-controlled. Jangan mengganti tes integrasi dengan SQLite karena semantics concurrency/transaction berbeda.

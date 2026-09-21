@@ -1,0 +1,730 @@
+{
+  "$schema": "../../schema/content-release.schema.json",
+  "chapterId": "chapter-02",
+  "chapterIndex": 2,
+  "title": "PAY YOURSELF FIRST",
+  "themeCode": "PROTECT",
+  "subtitle": "Build Your Financial Shield",
+  "scopeExplanation": "Foxy mengelola alokasi bulanan Rp100.000 untuk membangun tabungan impian blender Rp250.000 dan payung dana darurat Rp50.000, melatih prinsip Pay Yourself First, delayed gratification, dan manajemen risiko tak terduga.",
+  "prerequisites": [
+    "chapter-01"
+  ],
+  "learningObjectives": [
+    "LO-2.1: Menerapkan prinsip Pay Yourself First (menyisihkan tabungan dan dana darurat di awal sebelum belanja)",
+    "LO-2.2: Memahami fungsi Dana Darurat sebagai pelindung dari utang saat menghadapi guncangan tak terduga",
+    "LO-2.3: Mempraktikkan penundaan gratifikasi instan demi target produktif jangka menengah yang lebih bernilai"
+  ],
+  "initialAccounts": {
+    "availableCash": 0,
+    "goalSavings": 0,
+    "emergencyFund": 0,
+    "debt": 0,
+    "acquiredAssets": []
+  },
+  "targetIdentity": "Planner",
+  "badge": {
+    "badgeId": "BADGE-PLANNER",
+    "name": "Perencana Handal",
+    "description": "Berhasil membangun sistem perlindungan finansial Build Your Financial Shield dan menyusun alokasi tabungan disiplin tanpa utang.",
+    "assetKey": "img:badge-planner"
+  },
+  "entrypointNodeId": "CH2-SC-01",
+  "terminalNodeIds": [
+    "CH2-PASS-PLANNER",
+    "CH2-FAILSOFT-REPLAN"
+  ],
+  "scenes": [
+    {
+      "nodeId": "CH2-SC-01",
+      "dayIndex": 1,
+      "title": "Bulan 1: Penerimaan Uang & Fondasi Payung Darurat",
+      "speaker": "Foxy",
+      "narrativeText": "Bulan pertama dimulai! Foxy menerima uang saku mandiri Rp100.000. Foxy memiliki impian membeli blender usaha es kopi seharga Rp250.000 dan ingin membangun dana darurat pelindung Rp50.000. Bagaimana Foxy membagi uang Rp100.000 pertama ini?",
+      "foxyState": "FX-THINKING",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH2-PACING-MATH",
+      "consumedPreconditions": [
+        "OUTCOME_DISCIPLINED_SURVIVOR"
+      ],
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch2-c1-balanced",
+          "label": "Alokasi Seimbang: Tabung Blender Rp70.000 + Dana Darurat Rp20.000 + Kas Siaga Rp10.000",
+          "intentDescription": "Membangun tabungan impian sekaligus menyiapkan payung darurat dan kas cadangan sejak bulan pertama.",
+          "consequenceText": "Uang terbagi rapi: Rp70.000 masuk celengan blender, Rp20.000 menjadi payung darurat, dan Rp10.000 kas siaga di saku!",
+          "pedagogicalFeedback": "Pilihan terencana! Membangun dana darurat bersamaan dengan tabungan impian memastikan impian tidak buyar saat musibah datang.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH2-SC-02",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 100000,
+          "stateOperations": {
+            "inflow": 100000,
+            "transfers": [
+              {
+                "from": "availableCash",
+                "to": "goalSavings",
+                "amount": 70000
+              },
+              {
+                "from": "availableCash",
+                "to": "emergencyFund",
+                "amount": 20000
+              }
+            ]
+          }
+        },
+        {
+          "choiceId": "ch2-c1-fullblender",
+          "label": "Kejar Blender Cepat: Tabung Blender Rp90.000 + Kas Siaga Rp10.000 (Nol Dana Darurat)",
+          "intentDescription": "Mengejar impian blender secepat mungkin tanpa menyiapkan dana darurat pelindung.",
+          "consequenceText": "Celengan blender langsung terisi Rp90.000 dan kas siaga Rp10.000, tetapi Foxy tidak memiliki cadangan dana darurat sepeser pun.",
+          "pedagogicalFeedback": "Mengejar impian itu baik, namun tanpa dana darurat, sedikit saja masalah terjadi akan memaksa kita menguras tabungan atau berutang.",
+          "foxyReactionState": "FX-WORRIED",
+          "nextNodeId": "CH2-SC-02",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 100000,
+          "stateOperations": {
+            "inflow": 100000,
+            "transfers": [
+              {
+                "from": "availableCash",
+                "to": "goalSavings",
+                "amount": 90000
+              }
+            ]
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH2-01",
+        "title": "Prinsip Pay Yourself First",
+        "coreAnalogy": "Menabung di awal seperti mengisi bahan bakar sebelum perjalanan, bukan berharap ada bensin tersisa di akhir rute.",
+        "keyTakeaway": "Sisihkan uang untuk tabungan dan dana darurat begitu uang diterima, jangan tunggu sisa belanja."
+      },
+      "transferScenario": {
+        "questionId": "TQ-CH2-01",
+        "context": "Evaluasi Strategi Menabung Awal Bulan",
+        "prompt": "Dimas mendapat honor magang Rp500.000. Kebiasaannya adalah membelanjakan uang untuk jajan dan nongkrong, lalu menabung sisa uang di akhir bulan. Mengapa strategi ini hampir selalu berujung gagal menabung?",
+        "options": [
+          {
+            "optionId": "tq-c2-opt1",
+            "text": "Karena pengeluaran cenderung membesar menghabiskan seluruh uang yang ada di dompet jika tidak disisihkan di awal.",
+            "isCorrect": true,
+            "explanation": "Tepat! Ini adalah prinsip Parkinson dalam keuangan: belanja membesar mengikuti uang yang tersedia jika tidak dibatasi sejak hari pertama."
+          },
+          {
+            "optionId": "tq-c2-opt2",
+            "text": "Karena bank menolak setoran tabungan di tanggal tua.",
+            "isCorrect": false,
+            "explanation": "Bank melayani setoran kapan saja; kegagalan menabung berakar pada ketidakdisiplinan arus kas pribadi."
+          },
+          {
+            "optionId": "tq-c2-opt3",
+            "text": "Karena menabung di awal bulan menyebabkan saldo rekening otomatis terkunci.",
+            "isCorrect": false,
+            "explanation": "Menabung di awal justru mengamankan uang untuk tujuan masa depan sebelum terpakai secara impulsif."
+          }
+        ]
+      }
+    },
+    {
+      "nodeId": "CH2-SC-02",
+      "dayIndex": 2,
+      "title": "Bulan 1: Musibah Ban Sepeda Bocor di Jalan",
+      "speaker": "Foxy",
+      "narrativeText": "Di minggu ketiga bulan pertama, ban sepeda yang dipakai Foxy berangkat sekolah tertusuk paku bengkok dan sobek. Bengkel menyatakan ban harus diganti baru dengan total biaya Rp15.000.",
+      "foxyState": "FX-WORRIED",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH2-PACING-MATH",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch2-c2-pay-emergency",
+          "label": "Gunakan Dana Darurat (-Rp15.000 dari Darurat)",
+          "intentDescription": "Memanfaatkan payung pelindung sesuai fungsinya untuk musibah transportasi mendadak.",
+          "consequenceText": "Ban baru terpasang dan sepeda siap gowes! Dana darurat terpakai Rp15.000, tetapi tabungan blender tetap utuh dan bebas dari utang.",
+          "pedagogicalFeedback": "Inilah bukti nyata fungsi dana darurat: menyelamatkan mobilitas harian tanpa merusak rencana tabungan impian.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH2-SC-03",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -15000,
+          "stateOperations": {
+            "expense": 15000
+          },
+          "requiredConditions": {
+            "minEmergencyFund": 15000
+          }
+        },
+        {
+          "choiceId": "ch2-c2-pay-cash",
+          "label": "Bayar dari Kas Siaga & Tabungan (-Rp15.000)",
+          "intentDescription": "Terpaksa memecah tabungan impian dan kas siaga karena tidak memiliki dana darurat yang memadai.",
+          "consequenceText": "Sepeda selesai dibenahi, namun tabungan blender terpotong Rp5.000 dan kas siaga Rp10.000 ludes habis.",
+          "pedagogicalFeedback": "Tanpa dana darurat, impian masa depan menjadi korban setiap kali ada guncangan tak terduga.",
+          "foxyReactionState": "FX-WORRIED",
+          "nextNodeId": "CH2-SC-03",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -15000,
+          "stateOperations": {
+            "expense": 15000,
+            "transfers": [
+              {
+                "from": "goalSavings",
+                "to": "availableCash",
+                "amount": 5000
+              }
+            ]
+          },
+          "requiredConditions": {
+            "minCash": 10000,
+            "minGoalSavings": 5000
+          }
+        },
+        {
+          "choiceId": "ch2-c2-borrow-debt",
+          "label": "Pinjam Uang Teman Sebelah Bangku (Utang Rp15.000)",
+          "intentDescription": "Menghindari pemakaian dana sendiri dan memilih berutang.",
+          "consequenceText": "Sepeda selesai dibenahi, tetapi Foxy kini memiliki beban utang Rp15.000 yang wajib dibayar di bulan berikutnya.",
+          "pedagogicalFeedback": "Berutang saat mengalami musibah kecil menciptakan beban bunga dan stres pikiran di masa mendatang.",
+          "foxyReactionState": "FX-WORRIED",
+          "nextNodeId": "CH2-SC-03",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "debtIncurred": 15000,
+            "expense": 15000
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH2-02",
+        "title": "Fungsi Payung Dana Darurat",
+        "coreAnalogy": "Dana darurat seperti payung di bagasi motor: kamu berharap tidak hujan, tapi saat badai datang, kamu tidak basah kuyup.",
+        "keyTakeaway": "Gunakan dana darurat hanya untuk peristiwa mendesak, penting, dan tak terduga."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH2-SC-03",
+      "dayIndex": 3,
+      "title": "Bulan 2: Pemasukan Kedua & Siklus Pemulihan Payung",
+      "speaker": "Foxy",
+      "narrativeText": "Bulan kedua tiba! Foxy kembali menerima uang saku Rp100.000. Foxy mengevaluasi saldo darurat dan tabungan blender untuk menentukan alokasi bulan ini.",
+      "foxyState": "FX-THINKING",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH2-PACING-MATH",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch2-c3-restore-shield",
+          "label": "Prioritas Pemulihan Payung: Top-up Darurat Rp25.000 + Tabung Blender Rp65.000 + Kas Siaga Rp10.000",
+          "intentDescription": "Memperkuat kembali dana darurat yang terpakai dan menambah tabungan blender secara konsisten.",
+          "consequenceText": "Dana darurat pulih mengembang menjadi Rp30.000, dan tabungan blender bertambah mantap!",
+          "pedagogicalFeedback": "Langkah pemulihan yang disiplin! Dana darurat yang terpakai wajib diisi ulang agar selalu siap siaga.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH2-SC-04",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 100000,
+          "stateOperations": {
+            "inflow": 100000,
+            "transfers": [
+              {
+                "from": "availableCash",
+                "to": "emergencyFund",
+                "amount": 25000
+              },
+              {
+                "from": "availableCash",
+                "to": "goalSavings",
+                "amount": 65000
+              }
+            ]
+          }
+        },
+        {
+          "choiceId": "ch2-c3-ignore-shield",
+          "label": "Abaikan Darurat: Masukkan Rp85.000 ke Blender + Kas Siaga Rp15.000",
+          "intentDescription": "Mengabaikan pertahanan darurat demi memaksakan percepatan tabungan blender.",
+          "consequenceText": "Tabungan blender melonjak, namun pertahanan darurat Foxy tetap tipis dan rentan.",
+          "pedagogicalFeedback": "Mengabaikan pemulihan dana darurat membuat posisi keuangan rentan tumbang di musibah berikutnya.",
+          "foxyReactionState": "FX-WORRIED",
+          "nextNodeId": "CH2-SC-04",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 100000,
+          "stateOperations": {
+            "inflow": 100000,
+            "transfers": [
+              {
+                "from": "availableCash",
+                "to": "goalSavings",
+                "amount": 85000
+              }
+            ]
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH2-03",
+        "title": "Siklus Pemulihan Cadangan",
+        "coreAnalogy": "Kotak P3K yang plesternya sudah dipakai harus segera diisi kembali sebelum ada yang terluka lagi.",
+        "keyTakeaway": "Setelah dana darurat digunakan, prioritaskan pengisian ulangnya pada penerimaan uang berikutnya."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH2-SC-04",
+      "dayIndex": 4,
+      "title": "Bulan 2: Godaan Jaket Thrift Bergengsi",
+      "speaker": "Foxy",
+      "narrativeText": "Teman satu tongkrongan memamerkan jaket vintage thrift seharga Rp60.000. Modelnya keren dan semua memuji. Foxy tergoda memakai tabungan blendernya untuk membeli jaket serupa.",
+      "foxyState": "FX-THINKING",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH2-PACING-MATH",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch2-c4-delay-gratification",
+          "label": "Tahan Diri & Tunda Beli Jaket (Fokus Impian Blender)",
+          "intentDescription": "Mempraktikkan delayed gratification demi tujuan produktif jangka menengah.",
+          "consequenceText": "Foxy memilih memakai jaket lama yang masih bersih dan hangat. Tabungan blender aman dan impian tetap pada jalurnya!",
+          "pedagogicalFeedback": "Luar biasa! Menunda kepuasan sesaat demi membeli alat produksi usaha adalah pola pikir calon pengusaha sukses.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH2-SC-05",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          }
+        },
+        {
+          "choiceId": "ch2-c4-buy-jacket",
+          "label": "Beli Jaket Thrift Memakai Tabungan (-Rp60.000)",
+          "intentDescription": "Kalah oleh dorongan sosial dan mengorbankan progres impian modal usaha.",
+          "consequenceText": "Jaket terlihat keren, tetapi akumulasi tabungan blender Foxy terpangkas tajam sebesar Rp60.000.",
+          "pedagogicalFeedback": "Membobol tabungan modal untuk barang gaya hidup adalah penyebab paling umum mengapa rencana usaha tertunda berbulan-bulan.",
+          "foxyReactionState": "FX-SAD",
+          "nextNodeId": "CH2-SC-05",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": -60000,
+          "stateOperations": {
+            "expense": 60000
+          },
+          "requiredConditions": {
+            "minGoalSavings": 60000
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH2-04",
+        "title": "Menunda Kepuasan (Delayed Gratification)",
+        "coreAnalogy": "Makan benih jagung sekarang membuatmu kenyang hari ini, tetapi menanamnya akan menghasilkan panen jagung berlipat ganda.",
+        "keyTakeaway": "Tahan godaan membeli barang konsumtif agar modal produktifmu terkumpul utuh."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH2-SC-05",
+      "dayIndex": 5,
+      "title": "Bulan 3: Penerimaan Uang Ketiga & Konsistensi Alokasi",
+      "speaker": "Foxy",
+      "narrativeText": "Bulan ke-3 tiba! Foxy menerima uang saku Rp100.000 ketiga. Ini adalah momen pembuktian konsistensi untuk menyempurnakan alokasi menuju Boss Project Build Your Financial Shield.",
+      "foxyState": "FX-HAPPY",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH2-PACING-MATH",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch2-c5-consistent-shield",
+          "label": "Alokasi Disiplin (Bebas Utang): Dana Darurat Rp20.000 + Tabung Blender Rp70.000 + Kas Siaga Rp10.000",
+          "intentDescription": "Melengkapi target dana darurat dan memperbesar akumulasi tabungan blender secara tertib.",
+          "consequenceText": "Alokasi berjalan presisi! Dana darurat genap terlindungi dan tabungan blender bertambah mendekati garis finis modal usaha.",
+          "pedagogicalFeedback": "Konsistensi alokasi terbukti menjadi kunci utama tercapainya stabilitas keuangan mandiri.",
+          "foxyReactionState": "FX-CELEBRATE",
+          "nextNodeId": "CH2-SC-06",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 100000,
+          "stateOperations": {
+            "inflow": 100000,
+            "transfers": [
+              {
+                "from": "availableCash",
+                "to": "emergencyFund",
+                "amount": 20000
+              },
+              {
+                "from": "availableCash",
+                "to": "goalSavings",
+                "amount": 70000
+              }
+            ]
+          },
+          "requiredConditions": {
+            "maxDebt": 0
+          }
+        },
+        {
+          "choiceId": "ch2-c5-aggressive-blender",
+          "label": "Prioritas Penuh Blender (Bebas Utang): Dana Darurat Rp5.000 + Tabung Blender Rp85.000 + Kas Siaga Rp10.000",
+          "intentDescription": "Mengejar impian blender secepat mungkin namun mengurangi pengisian dana darurat pelindung.",
+          "consequenceText": "Tabungan blender melonjak cepat, namun pertahanan dana darurat belum mencapai standar perisai Rp50.000.",
+          "pedagogicalFeedback": "Menunda pengisian dana darurat membuat fondasi bisnismu rapuh jika terjadi musibah tak terduga.",
+          "foxyReactionState": "FX-WORRIED",
+          "nextNodeId": "CH2-SC-06",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 100000,
+          "stateOperations": {
+            "inflow": 100000,
+            "transfers": [
+              {
+                "from": "availableCash",
+                "to": "emergencyFund",
+                "amount": 5000
+              },
+              {
+                "from": "availableCash",
+                "to": "goalSavings",
+                "amount": 85000
+              }
+            ]
+          },
+          "requiredConditions": {
+            "maxDebt": 0
+          }
+        },
+        {
+          "choiceId": "ch2-c5-repay-debt",
+          "label": "Lunasi Utang Rp15.000 (Prioritas Kewajiban) + Dana Darurat Rp20.000 + Tabung Blender Rp65.000",
+          "intentDescription": "Memprioritaskan pelunasan utang agar posisi keuangan kembali bersih dan bebas beban.",
+          "consequenceText": "Utang Rp15.000 lunas terbayar! Hati Foxy lega tanpa beban cicilan, dan sisa alokasi tetap mengisi tabungan serta dana darurat.",
+          "pedagogicalFeedback": "Menuntaskan kewajiban utang sebelum belanja konsumtif adalah langkah bijak memulihkan kesehatan neraca keuangan.",
+          "foxyReactionState": "FX-HAPPY",
+          "nextNodeId": "CH2-SC-06",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 100000,
+          "stateOperations": {
+            "inflow": 100000,
+            "debtRepaid": 15000,
+            "transfers": [
+              {
+                "from": "availableCash",
+                "to": "emergencyFund",
+                "amount": 20000
+              },
+              {
+                "from": "availableCash",
+                "to": "goalSavings",
+                "amount": 65000
+              }
+            ]
+          },
+          "requiredConditions": {
+            "minDebt": 15000
+          }
+        },
+        {
+          "choiceId": "ch2-c5-ignore-debt",
+          "label": "Tunda Lunasi Utang (Abaikan Kewajiban): Tabung Blender Rp85.000 + Kas Siaga Rp15.000",
+          "intentDescription": "Mengabaikan kewajiban utang demi memaksakan tabungan impian bertambah.",
+          "consequenceText": "Foxy masih menanggung beban utang Rp15.000 yang belum terselesaikan.",
+          "pedagogicalFeedback": "Menunda pelunasan utang demi belanja atau menabung impian adalah kesalahan fatal dalam pengelolaan kas.",
+          "foxyReactionState": "FX-SAD",
+          "nextNodeId": "CH2-SC-06",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 100000,
+          "stateOperations": {
+            "inflow": 100000,
+            "transfers": [
+              {
+                "from": "availableCash",
+                "to": "goalSavings",
+                "amount": 85000
+              }
+            ]
+          },
+          "requiredConditions": {
+            "minDebt": 15000
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH2-05",
+        "title": "Konsistensi Sistem Alokasi",
+        "coreAnalogy": "Menabung teratur seperti meneteskan air ke kendi: tetes demi tetes setiap bulan akhirnya memenuhi kendi impianmu.",
+        "keyTakeaway": "Konsistensi jumlah alokasi jauh lebih menentukan kesuksesan daripada mengharapkan uang kaget dalam jumlah besar."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH2-SC-06",
+      "dayIndex": 6,
+      "title": "Bulan 3: Evaluasi Sistem & Menuju Boss Project",
+      "speaker": "Foxy",
+      "narrativeText": "Tiga bulan alokasi mandiri telah dilalui Foxy! Seluruh pencatatan dan saldo terbukti konsisten. Foxy bersiap menguji sistem perlindungannya di Boss Challenge Build Your Financial Shield.",
+      "foxyState": "FX-CELEBRATE",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH2-PACING-MATH",
+      "isTerminal": false,
+      "choices": [
+        {
+          "choiceId": "ch2-c6-pass-plan",
+          "label": "Serahkan Blueprint 'Build Your Financial Shield' (Bebas Utang & Dana Darurat Terpenuhi >= Rp50.000)",
+          "intentDescription": "Menuntaskan dokumen sistem proteksi finansial lengkap dengan dana darurat tercapai dan tanpa utang.",
+          "consequenceText": "Sistem proteksi finansial Foxy resmi terbentuk kuat! Gelar Perencana Handal (Planner) siap disandang.",
+          "pedagogicalFeedback": "Selamat! Kamu telah membuktikan bahwa dengan sistem proteksi finansial dan prinsip Pay Yourself First, impian masa depan dapat dirancang dengan aman dan bebas utang.",
+          "foxyReactionState": "FX-CELEBRATE",
+          "nextNodeId": "CH2-PASS-PLANNER",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          },
+          "requiredConditions": {
+            "maxDebt": 0,
+            "minEmergencyFund": 50000
+          }
+        },
+        {
+          "choiceId": "ch2-c6-failsoft-debt",
+          "label": "Evaluasi Beban Utang Tertunggak (Masih Memiliki Kewajiban Utang Belum Lunas)",
+          "intentDescription": "Melakukan evaluasi perbaikan karena masih menanggung beban utang yang belum dituntaskan.",
+          "consequenceText": "Foxy meninjau kembali neraca keuangannya: utang yang belum lunas menjadi penghambat utama stabilitas finansial.",
+          "pedagogicalFeedback": "Selesaikan kewajiban utang terlebih dahulu sebelum mengejar target aset atau menabung impian.",
+          "foxyReactionState": "FX-SAD",
+          "nextNodeId": "CH2-FAILSOFT-REPLAN",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          },
+          "requiredConditions": {
+            "minDebt": 1
+          }
+        },
+        {
+          "choiceId": "ch2-c6-failsoft-shield",
+          "label": "Evaluasi Defisit Perisai Finansial (Dana Darurat Belum Capai Target Rp50.000)",
+          "intentDescription": "Melakukan evaluasi perbaikan karena dana darurat belum mencapai target proteksi Rp50.000.",
+          "consequenceText": "Foxy meninjau kembali pos alokasi: dana darurat yang belum mencukupi membuat posisi keuangan rentan terhadap guncangan.",
+          "pedagogicalFeedback": "Prioritaskan membangun dana darurat hingga mencapai target minimum agar tidak mudah jatuh ke dalam utang.",
+          "foxyReactionState": "FX-THINKING",
+          "nextNodeId": "CH2-FAILSOFT-REPLAN",
+          "rewardPolicyKey": "REWARD-STORY-SCENE-STANDARD",
+          "deltaSimulatedMoney": 0,
+          "stateOperations": {
+            "expense": 0
+          },
+          "requiredConditions": {
+            "maxDebt": 0,
+            "maxEmergencyFund": 49999
+          }
+        }
+      ],
+      "microlearning": {
+        "conceptId": "ML-CH2-06",
+        "title": "Kemerdekaan Finansial Pemula",
+        "coreAnalogy": "Memulai usaha dengan modal tabungan sendiri membuat setiap rupiah keuntungan nantinya murni milikmu, bukan untuk membayar bunga cicilan.",
+        "keyTakeaway": "Bangun pertahanan dana darurat sebelum memulai langkah usaha agar bisnismu memiliki daya tahan tinggi."
+      },
+      "transferScenario": null
+    },
+    {
+      "nodeId": "CH2-PASS-PLANNER",
+      "dayIndex": 6,
+      "title": "Mastery Gate: Gelar Planner Terkunci",
+      "speaker": "Foxy",
+      "narrativeText": "Luar biasa! Foxy berhasil menguasai prinsip Pay Yourself First, menyusun blueprint Build Your Financial Shield, memitigasi musibah tak terduga tanpa utang berbunga, dan meraih gelar Planner!",
+      "foxyState": "FX-CELEBRATE",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH2-PACING-MATH",
+      "isTerminal": true,
+      "terminalType": "pass",
+      "producedOutcomeTags": [
+        "OUTCOME_DISCIPLINED_PLANNER"
+      ],
+      "choices": []
+    },
+    {
+      "nodeId": "CH2-FAILSOFT-REPLAN",
+      "dayIndex": 6,
+      "title": "Fail-Soft: Evaluasi & Rekonstruksi Perisai Finansial",
+      "speaker": "Foxy",
+      "narrativeText": "Perisai finansial Foxy sempat jebol oleh godaan pengeluaran konsumtif atau utang. Foxy duduk bersama untuk meninjau kembali formula Pay Yourself First agar lebih tangguh di kesempatan berikutnya.",
+      "foxyState": "FX-SAD",
+      "contentWarning": null,
+      "assumptionRef": "DEC-CH2-PACING-MATH",
+      "isTerminal": true,
+      "terminalType": "fail_soft",
+      "producedOutcomeTags": [
+        "OUTCOME_SHIELD_REVISION_NEEDED"
+      ],
+      "choices": []
+    }
+  ],
+  "miniGame": {
+    "gameId": "MG-DANA-DARURAT",
+    "title": "Simulasi Dana Darurat: Uji Ketahanan Payung",
+    "gameType": "allocation_simulation",
+    "concept": "Simulasi alokasi dana bulanan dan mitigasi risiko menghadapi 3 skenario guncangan tak terduga secara berurutan.",
+    "timeLimitSeconds": 90,
+    "passThresholdPercent": 80,
+    "accessibleInputSupported": true,
+    "simulationScenarios": [
+      {
+        "scenarioId": "shock-01",
+        "title": "Servis Rem Sepeda Rusak",
+        "description": "Rem sepeda Foxy blong saat melintas jalan menurun. Keselamatan fisik mendesak harus ditangani hari ini.",
+        "shockAmount": 15000,
+        "shockAccount": "emergencyFund",
+        "mitigationOptions": [
+          {
+            "optionId": "mit-01-a",
+            "label": "Gunakan Dana Darurat yang Sudah Disisihkan",
+            "isRecommended": true,
+            "rationale": "Sesuai fungsi utama dana darurat untuk keselamatan fisik mendesak."
+          },
+          {
+            "optionId": "mit-01-b",
+            "label": "Pinjam Uang Berbunga ke Teman",
+            "isRecommended": false,
+            "rationale": "Menambah beban utang padahal ada dana cadangan mandiri."
+          }
+        ]
+      },
+      {
+        "scenarioId": "shock-02",
+        "title": "Iuran Kertas Ujian Semester",
+        "description": "Pengumuman mendadak iuran modul latihan ujian akhir semester yang wajib dibayar besok pagi.",
+        "shockAmount": 10000,
+        "shockAccount": "emergencyFund",
+        "mitigationOptions": [
+          {
+            "optionId": "mit-02-a",
+            "label": "Bayar dari Alokasi Dana Darurat Akademis",
+            "isRecommended": true,
+            "rationale": "Kebutuhan studi wajib yang tidak terjadwal diserap oleh payung darurat."
+          },
+          {
+            "optionId": "mit-02-b",
+            "label": "Korbankan Uang Tabungan Impian",
+            "isRecommended": false,
+            "rationale": "Tabungan impian tidak boleh dibobol jika payung darurat tersedia."
+          }
+        ]
+      },
+      {
+        "scenarioId": "shock-03",
+        "title": "Obat Sakit Gigi Darurat",
+        "description": "Gigi Foxy ngilu parah di malam hari sehingga tidak bisa tidur dan butuh pereda nyeri segera dari apotek.",
+        "shockAmount": 20000,
+        "shockAccount": "emergencyFund",
+        "mitigationOptions": [
+          {
+            "optionId": "mit-03-a",
+            "label": "Beli Obat Apotek Memakai Dana Darurat Kesehatan",
+            "isRecommended": true,
+            "rationale": "Kesehatan fisik adalah prioritas mutlak yang sah menggunakan dana darurat."
+          },
+          {
+            "optionId": "mit-03-b",
+            "label": "Tahan Sakit Demi Menghemat Saldo",
+            "isRecommended": false,
+            "rationale": "Membahayakan kesehatan fisik bertentangan dengan prinsip kesejahteraan finansial."
+          }
+        ]
+      }
+    ]
+  },
+  "bossChallenge": {
+    "bossId": "BOSS-CH2-SHIELD",
+    "title": "Build Your Financial Shield",
+    "scenario": "Pandu Foxy menyusun cetak biru sistem perlindungan keuangan Build Your Financial Shield: tetapkan target tabungan blender Rp250.000, target dana darurat Rp50.000, alokasi bulanan Pay Yourself First, dan aturan pemakaian dana darurat tanpa utang.",
+    "criteria": "Menyusun artefak Financial Shield terstruktur, memvalidasi konservasi saldo multi-periode, dan lulus skenario transfer kasus baru.",
+    "maxAttemptsBeforeSupportHint": 3,
+    "rewardPolicyKey": "REWARD-BOSS-CH2-PLANNER",
+    "masteryArtifact": {
+      "artifactId": "ARTIFACT-CH2-FINANCIAL-SHIELD",
+      "artifactName": "Build Your Financial Shield Blueprint",
+      "documentTitle": "Cetak Biru Sistem Proteksi Finansial & Target Tabungan Foxy",
+      "sections": [
+        {
+          "sectionId": "sec-targets",
+          "title": "Target Finansial Terukur",
+          "fields": [
+            {
+              "fieldId": "savings_goal",
+              "label": "Target Tabungan Impian Produktif (Blender)",
+              "fieldType": "integer_currency",
+              "expectedContentRule": "250000"
+            },
+            {
+              "fieldId": "emergency_target",
+              "label": "Target Dana Darurat Pelindung",
+              "fieldType": "integer_currency",
+              "expectedContentRule": "50000"
+            }
+          ]
+        },
+        {
+          "sectionId": "sec-allocation",
+          "title": "Aturan Alokasi Pay Yourself First",
+          "fields": [
+            {
+              "fieldId": "monthly_allocation_rule",
+              "label": "Aturan Alokasi Setiap Menerima Uang",
+              "fieldType": "allocation_rule",
+              "expectedContentRule": "Sisihkan minimal 20% ke dana darurat dan 70% ke tabungan impian di awal penerimaan"
+            },
+            {
+              "fieldId": "cash_buffer",
+              "label": "Batas Kas Siaga Pengeluaran Rutin",
+              "fieldType": "integer_currency",
+              "expectedContentRule": "<= 15000"
+            }
+          ]
+        },
+        {
+          "sectionId": "sec-usage-rules",
+          "title": "Protokol Pemakaian & Pemulihan Dana Darurat",
+          "fields": [
+            {
+              "fieldId": "emergency_criteria",
+              "label": "Kriteria Sah Penggunaan Dana Darurat",
+              "fieldType": "text_short",
+              "expectedContentRule": "Hanya untuk kondisi mendesak, penting, dan tak terduga (kesehatan, keselamatan, studi wajib)"
+            },
+            {
+              "fieldId": "replenishment_rule",
+              "label": "Aturan Pengisian Kembali Pasca-Musibah",
+              "fieldType": "text_short",
+              "expectedContentRule": "Prioritaskan pemulihan dana darurat pada alokasi bulan berikutnya sebelum memperbesar belanja lain"
+            }
+          ]
+        }
+      ]
+    },
+    "evaluationRubric": [
+      {
+        "dimension": "Konsistensi Konservasi Nilai",
+        "passCondition": "Total arus kas masuk sama persis dengan kas siaga + tabungan + dana darurat + akumulasi belanja dikurangi utang.",
+        "weight": 40
+      },
+      {
+        "dimension": "Kelengkapan Struktur Cetak Biru",
+        "passCondition": "Seluruh 6 field dokumen Build Your Financial Shield terisi lengkap sesuai aturan konten.",
+        "weight": 35
+      },
+      {
+        "dimension": "Penerapan pada Kasus Transfer",
+        "passCondition": "Mampu memilih keputusan tepat pada skenario transfer kasus baru berdasarkan prinsip financial shield.",
+        "weight": 25
+      }
+    ],
+    "transferApplicationScenario": {
+      "scenarioId": "SCEN-CH2-TRANSFER-APPLY",
+      "title": "Uji Penerapan Kasus Baru: Rencana Perlindungan Sari",
+      "newCasePrompt": "Sari ingin membeli wajan usaha keripik pisang seharga Rp200.000. Temannya menyarankan meminjam pinjol bunga 10% per bulan daripada menabung selama 2 bulan. Mengapa meminjam pinjol untuk usaha pemula yang belum teruji sangat berbahaya bagi perisai keuangannya?",
+      "evaluationRule": "Bunga pinjol bersifat pasti dan berjalan terus, sementara pendapatan usaha pemula belum teruji sehingga berisiko meruntuhkan seluruh keuangan pribadi."
+    }
+  }
+}

@@ -18,6 +18,7 @@ Jika Antigravity tidak dapat membaca file di luar folder `finspire`, salin sumbe
 | Fase | Prompt | Hasil utama | Boleh lanjut jika |
 |---|---|---|---|
 | 01 | [`01-content-specification.prompt.md`](./01-content-specification.prompt.md) | Kontrak konten terstruktur dan konten pilot Ch1–2 berstatus draft | Semua inkonsistensi terungkap; keputusan produk yang memblokir sudah disetujui |
+| 01R | [`01R-content-reconciliation.prompt.md`](./01R-content-reconciliation.prompt.md) | Rekonsiliasi output Fase 01 terhadap PRD DOCX canonical serta perbaikan validator false-positive | Wajib untuk output Fase 01 yang dibuat sebelum pergantian sumber; seluruh regression test lulus dan blocking decision disetujui |
 | 02 | [`02-architecture-contract.prompt.md`](./02-architecture-contract.prompt.md) | ADR, ERD, API, protokol sync, threat model, strategi tes | Tidak ada keputusan arsitektur blocking; kontrak saling konsisten |
 | 03 | [`03-foundation-database.prompt.md`](./03-foundation-database.prompt.md) | Fondasi server, PostgreSQL/Drizzle, migrasi, seed, observability dasar | Fresh migration dan seed terbukti; build/typecheck/test lulus |
 | 04 | [`04-auth-privacy-security.prompt.md`](./04-auth-privacy-security.prompt.md) | Identitas pseudonim, sesi, consent, RBAC, ekspor/hapus akun | Skenario abuse dan otorisasi utama lulus |
@@ -39,5 +40,7 @@ Jika Antigravity tidak dapat membaca file di luar folder `finspire`, salin sumbe
 
 ## Mulai sekarang
 
-Mulai dari [`01-content-specification.prompt.md`](./01-content-specification.prompt.md). Jangan mengimplementasikan database atau endpoint sebelum content gate dan architecture gate disetujui.
+Untuk repository ini, jalankan [`01R-content-reconciliation.prompt.md`](./01R-content-reconciliation.prompt.md) terhadap output Fase 01 yang sudah ada. Jangan mengulang Fase 01 dari nol dan jangan menjalankan Fase 02 sampai hasil rekonsiliasi ditinjau serta disetujui.
+
+Untuk instalasi baru yang belum pernah menjalankan Fase 01, mulai dari [`01-content-specification.prompt.md`](./01-content-specification.prompt.md); prompt tersebut sudah memakai PRD DOCX sebagai sumber canonical.
 

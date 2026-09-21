@@ -1,0 +1,538 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://finspire.app/schemas/content-release.schema.json",
+  "title": "Finspire Content Release & Chapter Schema",
+  "description": "Unified JSON Schema for Finspire manifest releases and chapter scene graphs with account operations, mastery artifacts, and outcome tracking.",
+  "oneOf": [
+    { "$ref": "#/$defs/manifest" },
+    { "$ref": "#/$defs/chapter" }
+  ],
+  "$defs": {
+    "manifest": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "releaseId",
+        "status",
+        "locale",
+        "title",
+        "description",
+        "chapterFiles",
+        "rewardPolicies",
+        "assetDictionary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "$schema": { "type": "string" },
+        "schemaVersion": {
+          "type": "string",
+          "pattern": "^[0-9]{4}\\.[0-9]{2}-v[0-9]+$"
+        },
+        "releaseId": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["draft", "proposed", "reviewed", "approved", "published", "retired"]
+        },
+        "locale": {
+          "type": "string",
+          "const": "id-ID"
+        },
+        "title": { "type": "string", "minLength": 3 },
+        "description": { "type": "string", "minLength": 10 },
+        "publishedAt": { "type": ["string", "null"], "format": "date-time" },
+        "chapterFiles": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^chapter-[0-9]{2}\\.json$" }
+        },
+        "rewardPolicies": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["xp", "coin", "rule"],
+            "additionalProperties": false,
+            "properties": {
+              "xp": { "type": "integer", "minimum": 0 },
+              "coin": { "type": "integer", "minimum": 0 },
+              "badgeId": { "type": "string" },
+              "rule": {
+                "type": "string",
+                "enum": ["once_per_node", "first_pass_only", "daily_replay_capped"]
+              }
+            }
+          }
+        },
+        "assetDictionary": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^(anim|img|audio):[a-z0-9_-]+$"
+          }
+        }
+      }
+    },
+    "chapter": {
+      "type": "object",
+      "required": [
+        "chapterId",
+        "chapterIndex",
+        "title",
+        "themeCode",
+        "subtitle",
+        "scopeExplanation",
+        "prerequisites",
+        "learningObjectives",
+        "initialAccounts",
+        "targetIdentity",
+        "badge",
+        "entrypointNodeId",
+        "terminalNodeIds",
+        "scenes",
+        "miniGame",
+        "bossChallenge"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "$schema": { "type": "string" },
+        "chapterId": {
+          "type": "string",
+          "pattern": "^chapter-[0-9]{2}$"
+        },
+        "chapterIndex": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": { "type": "string", "minLength": 3 },
+        "themeCode": {
+          "type": "string",
+          "enum": ["PRESERVE", "PROTECT", "DEFEND", "PRODUCE", "GROW"]
+        },
+        "subtitle": { "type": "string", "minLength": 3 },
+        "scopeExplanation": { "type": "string", "minLength": 10 },
+        "prerequisites": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "learningObjectives": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "initialAccounts": {
+          "type": "object",
+          "required": ["availableCash"],
+          "additionalProperties": false,
+          "properties": {
+            "availableCash": { "type": "integer", "minimum": 0 },
+            "goalSavings": { "type": "integer", "minimum": 0 },
+            "emergencyFund": { "type": "integer", "minimum": 0 },
+            "debt": { "type": "integer", "minimum": 0 },
+            "acquiredAssets": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "targetIdentity": {
+          "type": "string",
+          "enum": ["Survivor", "Planner", "Guardian", "Value Creator", "Wealth Builder"]
+        },
+        "badge": {
+          "type": "object",
+          "required": ["badgeId", "name", "description", "assetKey"],
+          "additionalProperties": false,
+          "properties": {
+            "badgeId": { "type": "string" },
+            "name": { "type": "string" },
+            "description": { "type": "string" },
+            "assetKey": {
+              "type": "string",
+              "pattern": "^(anim|img|audio):[a-z0-9_-]+$"
+            }
+          }
+        },
+        "entrypointNodeId": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_-]+$"
+        },
+        "terminalNodeIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z0-9_-]+$"
+          }
+        },
+        "scenes": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/scene" }
+        },
+        "miniGame": { "$ref": "#/$defs/miniGame" },
+        "bossChallenge": { "$ref": "#/$defs/bossChallenge" }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "required": [
+        "nodeId",
+        "dayIndex",
+        "title",
+        "speaker",
+        "narrativeText",
+        "foxyState",
+        "isTerminal",
+        "choices"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "nodeId": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_-]+$"
+        },
+        "dayIndex": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": { "type": "string" },
+        "speaker": { "type": "string" },
+        "narrativeText": { "type": "string", "minLength": 5 },
+        "foxyState": {
+          "type": "string",
+          "enum": [
+            "FX-IDLE",
+            "FX-THINKING",
+            "FX-HAPPY",
+            "FX-WORRIED",
+            "FX-SAD",
+            "FX-CELEBRATE",
+            "FX-LEVEL-UP",
+            "FX-ERROR"
+          ]
+        },
+        "contentWarning": { "type": ["string", "null"] },
+        "assumptionRef": { "type": ["string", "null"] },
+        "isTerminal": { "type": "boolean" },
+        "terminalType": {
+          "type": "string",
+          "enum": ["pass", "fail_soft"]
+        },
+        "producedOutcomeTags": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^OUTCOME_[A-Z0-9_]+$" }
+        },
+        "consumedPreconditions": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^(REQUIRE|CONSUME|OUTCOME)_[A-Z0-9_]+$" }
+        },
+        "choices": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/choice" }
+        },
+        "microlearning": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "conceptId": { "type": "string" },
+            "title": { "type": "string" },
+            "coreAnalogy": { "type": "string" },
+            "keyTakeaway": { "type": "string" }
+          }
+        },
+        "transferScenario": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/transferScenario" }
+          ]
+        }
+      }
+    },
+    "choice": {
+      "type": "object",
+      "required": [
+        "choiceId",
+        "label",
+        "intentDescription",
+        "consequenceText",
+        "pedagogicalFeedback",
+        "foxyReactionState",
+        "nextNodeId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "choiceId": {
+          "type": "string",
+          "pattern": "^[a-z0-9_-]+$"
+        },
+        "label": { "type": "string", "minLength": 2 },
+        "intentDescription": { "type": "string" },
+        "consequenceText": { "type": "string", "minLength": 5 },
+        "pedagogicalFeedback": { "type": "string", "minLength": 5 },
+        "foxyReactionState": {
+          "type": "string",
+          "enum": [
+            "FX-IDLE",
+            "FX-THINKING",
+            "FX-HAPPY",
+            "FX-WORRIED",
+            "FX-SAD",
+            "FX-CELEBRATE",
+            "FX-LEVEL-UP",
+            "FX-ERROR"
+          ]
+        },
+        "nextNodeId": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_-]+$"
+        },
+        "rewardPolicyKey": { "type": "string" },
+        "deltaSimulatedMoney": { "type": "integer" },
+        "stateOperations": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "inflow": { "type": "integer", "minimum": 0 },
+            "expense": { "type": "integer", "minimum": 0 },
+            "transfer": {
+              "type": "object",
+              "required": ["from", "to", "amount"],
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "enum": ["availableCash", "emergencyFund", "goalSavings"]
+                },
+                "to": {
+                  "type": "string",
+                  "enum": ["availableCash", "emergencyFund", "goalSavings"]
+                },
+                "amount": { "type": "integer", "minimum": 0 }
+              }
+            },
+            "transfers": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["from", "to", "amount"],
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "enum": ["availableCash", "emergencyFund", "goalSavings"]
+                  },
+                  "to": {
+                    "type": "string",
+                    "enum": ["availableCash", "emergencyFund", "goalSavings"]
+                  },
+                  "amount": { "type": "integer", "minimum": 0 }
+                }
+              }
+            },
+            "debtIncurred": { "type": "integer", "minimum": 0 },
+            "debtRepaid": { "type": "integer", "minimum": 0 },
+            "assetAcquired": { "type": "string" }
+          }
+        },
+        "requiredConditions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "minCash": { "type": "integer", "minimum": 0 },
+            "maxCash": { "type": "integer", "minimum": 0 },
+            "minEmergencyFund": { "type": "integer", "minimum": 0 },
+            "maxEmergencyFund": { "type": "integer", "minimum": 0 },
+            "minGoalSavings": { "type": "integer", "minimum": 0 },
+            "maxGoalSavings": { "type": "integer", "minimum": 0 },
+            "minDebt": { "type": "integer", "minimum": 0 },
+            "maxDebt": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "transferScenario": {
+      "type": "object",
+      "required": ["questionId", "context", "prompt", "options"],
+      "additionalProperties": false,
+      "properties": {
+        "questionId": { "type": "string" },
+        "context": { "type": "string" },
+        "prompt": { "type": "string" },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["optionId", "text", "isCorrect", "explanation"],
+            "additionalProperties": false,
+            "properties": {
+              "optionId": { "type": "string" },
+              "text": { "type": "string" },
+              "isCorrect": { "type": "boolean" },
+              "explanation": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "miniGame": {
+      "type": "object",
+      "required": [
+        "gameId",
+        "title",
+        "gameType",
+        "concept",
+        "timeLimitSeconds",
+        "passThresholdPercent",
+        "accessibleInputSupported"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "gameId": { "type": "string" },
+        "title": { "type": "string" },
+        "gameType": {
+          "type": "string",
+          "enum": ["categorization", "allocation_simulation"]
+        },
+        "concept": { "type": "string" },
+        "timeLimitSeconds": { "type": "integer", "minimum": 10 },
+        "passThresholdPercent": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "accessibleInputSupported": { "type": "boolean", "const": true },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["itemId", "name", "category", "explanation"],
+            "additionalProperties": false,
+            "properties": {
+              "itemId": { "type": "string" },
+              "name": { "type": "string" },
+              "category": { "type": "string" },
+              "explanation": { "type": "string" }
+            }
+          }
+        },
+        "simulationScenarios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["scenarioId", "title", "description", "shockAmount", "shockAccount", "mitigationOptions"],
+            "additionalProperties": false,
+            "properties": {
+              "scenarioId": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "shockAmount": { "type": "integer", "minimum": 0 },
+              "shockAccount": { "type": "string", "enum": ["emergencyFund", "availableCash"] },
+              "mitigationOptions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["optionId", "label", "isRecommended", "rationale"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "optionId": { "type": "string" },
+                    "label": { "type": "string" },
+                    "isRecommended": { "type": "boolean" },
+                    "rationale": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "bossChallenge": {
+      "type": "object",
+      "required": [
+        "bossId",
+        "title",
+        "scenario",
+        "criteria",
+        "maxAttemptsBeforeSupportHint",
+        "rewardPolicyKey",
+        "masteryArtifact",
+        "evaluationRubric",
+        "transferApplicationScenario"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "bossId": { "type": "string" },
+        "title": { "type": "string" },
+        "scenario": { "type": "string" },
+        "criteria": { "type": "string" },
+        "maxAttemptsBeforeSupportHint": { "type": "integer", "minimum": 1 },
+        "rewardPolicyKey": { "type": "string" },
+        "masteryArtifact": {
+          "type": "object",
+          "required": ["artifactId", "artifactName", "documentTitle", "sections"],
+          "additionalProperties": false,
+          "properties": {
+            "artifactId": { "type": "string" },
+            "artifactName": { "type": "string" },
+            "documentTitle": { "type": "string" },
+            "sections": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["sectionId", "title", "fields"],
+                "additionalProperties": false,
+                "properties": {
+                  "sectionId": { "type": "string" },
+                  "title": { "type": "string" },
+                  "fields": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["fieldId", "label", "fieldType", "expectedContentRule"],
+                      "additionalProperties": false,
+                      "properties": {
+                        "fieldId": { "type": "string" },
+                        "label": { "type": "string" },
+                        "fieldType": {
+                          "type": "string",
+                          "enum": ["integer_currency", "text_short", "text_list", "allocation_rule"]
+                        },
+                        "expectedContentRule": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "evaluationRubric": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["dimension", "passCondition", "weight"],
+            "additionalProperties": false,
+            "properties": {
+              "dimension": { "type": "string" },
+              "passCondition": { "type": "string" },
+              "weight": { "type": "integer", "minimum": 1, "maximum": 100 }
+            }
+          }
+        },
+        "transferApplicationScenario": {
+          "type": "object",
+          "required": ["scenarioId", "title", "newCasePrompt", "evaluationRule"],
+          "additionalProperties": false,
+          "properties": {
+            "scenarioId": { "type": "string" },
+            "title": { "type": "string" },
+            "newCasePrompt": { "type": "string" },
+            "evaluationRule": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}

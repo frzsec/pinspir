@@ -1,0 +1,1038 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Finspire Production Pilot API",
+    "version": "1.0.0",
+    "description": "Spesifikasi kontrak REST/JSON Route Handlers /api/v1 untuk Finspire PWA offline-first production pilot."
+  },
+  "servers": [
+    {
+      "url": "/api/v1",
+      "description": "Local / Production Next.js Route Handlers"
+    }
+  ],
+  "paths": {
+    "/health/liveness": {
+      "get": {
+        "summary": "Liveness probe",
+        "description": "Memeriksa apakah server process berjalan normal.",
+        "responses": {
+          "200": {
+            "description": "Server hidup",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/readiness": {
+      "get": {
+        "summary": "Readiness probe",
+        "description": "Memeriksa kesiapan dependensi kritis (PostgreSQL connection pool & local disk storage).",
+        "responses": {
+          "200": {
+            "description": "Layanan siap melayani trafik",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessStatus"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database down atau storage degraded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/bootstrap": {
+      "get": {
+        "summary": "Application Bootstrap Session",
+        "description": "Mengembalikan data sesi aktif, profil pemain, dan rilis konten aktif dalam satu panggilan inisialisasi aplikasi.",
+        "responses": {
+          "200": {
+            "description": "Data bootstrap berhasil diperoleh",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BootstrapResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register-pseudonymous": {
+      "post": {
+        "summary": "Pendaftaran akun pseudonim",
+        "description": "Mendaftarkan murid baru tanpa email/nomor telepon asli, menerbitkan Player Code dan Passphrase.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPseudonymousRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pendaftaran berhasil, sesi diterbitkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Input tidak valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login dengan Player Code & Passphrase",
+        "description": "Otentikasi murid atau guru, menerbitkan cookie HttpOnly secure session.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthSuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Kredensial salah",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Logout sesi",
+        "description": "Menghapus cookie sesi server dan menandai sesi revoked.",
+        "responses": {
+          "200": {
+            "description": "Logout berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/player/profile": {
+      "get": {
+        "summary": "Get Player Profile",
+        "description": "Mengambil profil pemain dan proyeksi terkini.",
+        "responses": {
+          "200": {
+            "description": "Profil berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesi tidak terotentikasi",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/catalog": {
+      "get": {
+        "summary": "Katalog rilis konten",
+        "description": "Daftar rilis konten publik dan status integritas SHA-256.",
+        "responses": {
+          "200": {
+            "description": "Daftar paket rilis konten",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentCatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/releases/{releaseId}/manifest": {
+      "get": {
+        "summary": "Unduh manifest rilis immutable",
+        "parameters": [
+          {
+            "name": "releaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Manifest release JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Rilis tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/content/releases/{releaseId}/chapters/{chapterId}": {
+      "get": {
+        "summary": "Unduh berkas chapter rilis immutable",
+        "parameters": [
+          {
+            "name": "releaseId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chapterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Chapter release JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playthrough/attempts": {
+      "post": {
+        "summary": "Mulai attempt chapter baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAttemptRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Attempt berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playthrough/attempts/{attemptId}": {
+      "get": {
+        "summary": "Ambil canonical snapshot attempt",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Canonical attempt snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttemptResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/batch": {
+      "post": {
+        "summary": "Jalur Utama Sinkronisasi Offline (Ordered Action Batch)",
+        "description": "Menerima ordered actions yang dikumpulkan klien saat offline dan memprosesnya secara transaksional di server.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SyncBatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Batch diproses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncBatchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Format batch invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sesi tidak sah",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/progress/achievements": {
+      "get": {
+        "summary": "Daftar pencapaian & lencana pemain",
+        "responses": {
+          "200": {
+            "description": "Daftar lencana dan pencapaian",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AchievementsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leaderboard/cohort": {
+      "get": {
+        "summary": "Papan skor kelas (Opt-in cohort leaderboard)",
+        "description": "Papan skor terbatas dalam kelompok kelas dengan nama samaran/alias murid.",
+        "responses": {
+          "200": {
+            "description": "Data leaderboard cohort",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CohortLeaderboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cohorts/join": {
+      "post": {
+        "summary": "Gabung kelas dengan kode akses",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinCohortRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Berhasil bergabung ke cohort",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teacher/cohorts/{cohortId}/summary": {
+      "get": {
+        "summary": "Ringkasan capaian kelas bagi guru pembimbing",
+        "parameters": [
+          {
+            "name": "cohortId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ringkasan statistik cohort",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherCohortSummaryResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Bukan guru pembimbing kelas ini",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/teacher/students/{studentId}/reset-credential": {
+      "post": {
+        "summary": "Pemulihan kredensial murid oleh guru",
+        "parameters": [
+          {
+            "name": "studentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherResetCredentialRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Passphrase baru berhasil di-generate",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherResetCredentialResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/privacy/consent": {
+      "get": {
+        "summary": "Status persetujuan privasi pengguna",
+        "responses": {
+          "200": {
+            "description": "Status consent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Rekam persetujuan pengguna/wali",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordConsentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Consent berhasil direkam",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/privacy/export": {
+      "post": {
+        "summary": "Ekspor data pribadi pengguna",
+        "description": "Mengunduh arsip JSON seluruh riwayat aksi, saldo, dan profil murid.",
+        "responses": {
+          "200": {
+            "description": "Arsip data murid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/privacy/account": {
+      "delete": {
+        "summary": "Penghapusan akun permanen",
+        "description": "Menghapus akun murid dan menganonimkan log audit.",
+        "responses": {
+          "200": {
+            "description": "Akun berhasil dihapus",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/push/subscribe": {
+      "post": {
+        "summary": "Registrasi langganan Web Push",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Langganan Web Push tersimpan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/push/unsubscribe": {
+      "post": {
+        "summary": "Hapus langganan Web Push",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushUnsubscribeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Langganan dinonaktifkan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/events": {
+      "post": {
+        "summary": "Ingestion first-party analytics",
+        "description": "Merekam telemetri aplikasi tanpa data pribadi mentah.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyticsEventsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Telemetri diterima",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessMessage"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthStatus": {
+        "type": "object",
+        "required": ["status", "serverTime", "version"],
+        "properties": {
+          "status": { "type": "string", "enum": ["ok"] },
+          "serverTime": { "type": "string", "format": "date-time" },
+          "version": { "type": "string" }
+        }
+      },
+      "ReadinessStatus": {
+        "type": "object",
+        "required": ["status", "database", "storage", "serverTime"],
+        "properties": {
+          "status": { "type": "string", "enum": ["ready", "degraded"] },
+          "database": { "type": "string", "enum": ["connected", "disconnected"] },
+          "storage": { "type": "string", "enum": ["writable", "readonly"] },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ErrorEnvelope": {
+        "type": "object",
+        "required": ["error", "requestId", "serverTime"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" },
+              "details": { "type": "object" }
+            }
+          },
+          "requestId": { "type": "string" },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SuccessMessage": {
+        "type": "object",
+        "required": ["success", "message", "serverTime"],
+        "properties": {
+          "success": { "type": "boolean" },
+          "message": { "type": "string" },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "BootstrapResponse": {
+        "type": "object",
+        "required": ["authenticated", "serverTime", "activeRelease"],
+        "properties": {
+          "authenticated": { "type": "boolean" },
+          "serverTime": { "type": "string", "format": "date-time" },
+          "activeRelease": {
+            "type": "object",
+            "required": ["releaseId", "manifestUrl", "manifestSha256"],
+            "properties": {
+              "releaseId": { "type": "string" },
+              "manifestUrl": { "type": "string" },
+              "manifestSha256": { "type": "string" }
+            }
+          },
+          "player": {
+            "type": "object",
+            "properties": {
+              "userId": { "type": "string" },
+              "playerCode": { "type": "string" },
+              "name": { "type": "string" },
+              "role": { "type": "string" },
+              "avatarKey": { "type": "string" },
+              "projection": { "type": "object" }
+            }
+          }
+        }
+      },
+      "RegisterPseudonymousRequest": {
+        "type": "object",
+        "required": ["aliasName", "accessCode"],
+        "properties": {
+          "aliasName": { "type": "string", "minLength": 2, "maxLength": 32 },
+          "accessCode": { "type": "string", "minLength": 6, "maxLength": 8 },
+          "preferredAvatar": { "type": "string" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["playerCode", "passphrase"],
+        "properties": {
+          "playerCode": { "type": "string", "pattern": "^[A-Z0-9_-]{8,16}$" },
+          "passphrase": { "type": "string", "minLength": 6 }
+        }
+      },
+      "AuthSuccessResponse": {
+        "type": "object",
+        "required": ["success", "user", "serverTime"],
+        "properties": {
+          "success": { "type": "boolean" },
+          "user": {
+            "type": "object",
+            "required": ["id", "playerCode", "name", "role"],
+            "properties": {
+              "id": { "type": "string" },
+              "playerCode": { "type": "string" },
+              "name": { "type": "string" },
+              "role": { "type": "string" }
+            }
+          },
+          "temporaryPassphrase": { "type": "string" },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "PlayerProfileResponse": {
+        "type": "object",
+        "required": ["user", "projection", "serverTime"],
+        "properties": {
+          "user": { "type": "object" },
+          "projection": { "type": "object" },
+          "school": { "type": "object" },
+          "cohort": { "type": "object" },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ContentCatalogResponse": {
+        "type": "object",
+        "required": ["activeReleaseId", "releases", "serverTime"],
+        "properties": {
+          "activeReleaseId": { "type": "string" },
+          "releases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["releaseId", "schemaVersion", "status", "manifestSha256"],
+              "properties": {
+                "releaseId": { "type": "string" },
+                "schemaVersion": { "type": "string" },
+                "status": { "type": "string" },
+                "manifestSha256": { "type": "string" }
+              }
+            }
+          },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CreateAttemptRequest": {
+        "type": "object",
+        "required": ["releaseId", "chapterId", "installationId"],
+        "properties": {
+          "releaseId": { "type": "string" },
+          "chapterId": { "type": "string" },
+          "installationId": { "type": "string" }
+        }
+      },
+      "AttemptResponse": {
+        "type": "object",
+        "required": ["attemptId", "chapterId", "status", "currentAccounts", "serverTime"],
+        "properties": {
+          "attemptId": { "type": "string" },
+          "chapterId": { "type": "string" },
+          "status": { "type": "string" },
+          "currentNodeId": { "type": "string" },
+          "currentAccounts": { "type": "object" },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "SyncBatchRequest": {
+        "type": "object",
+        "required": ["protocolVersion", "batchId", "installationId", "lastServerCursor", "actions"],
+        "properties": {
+          "protocolVersion": { "type": "string", "enum": ["1.0"] },
+          "batchId": { "type": "string" },
+          "installationId": { "type": "string" },
+          "lastServerCursor": { "type": "string" },
+          "actions": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "required": ["actionId", "attemptId", "clientSequence", "actionType", "sceneNodeId", "contentVersion", "clientOccurredAt", "payload"],
+              "properties": {
+                "actionId": { "type": "string" },
+                "attemptId": { "type": "string" },
+                "clientSequence": { "type": "integer" },
+                "actionType": { "type": "string" },
+                "sceneNodeId": { "type": "string" },
+                "choiceId": { "type": "string" },
+                "contentVersion": { "type": "string" },
+                "clientOccurredAt": { "type": "string", "format": "date-time" },
+                "payload": { "type": "object" }
+              }
+            }
+          }
+        }
+      },
+      "SyncBatchResponse": {
+        "type": "object",
+        "required": ["batchId", "results", "nextServerCursor", "serverTime"],
+        "properties": {
+          "batchId": { "type": "string" },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["actionId", "status", "code", "retryable"],
+              "properties": {
+                "actionId": { "type": "string" },
+                "status": { "type": "string", "enum": ["accepted", "duplicate", "conflict", "rejected"] },
+                "code": { "type": "string" },
+                "message": { "type": "string" },
+                "retryable": { "type": "boolean" },
+                "canonicalConsequence": { "type": "object" }
+              }
+            }
+          },
+          "nextServerCursor": { "type": "string" },
+          "canonicalSnapshot": { "type": "object" },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "AchievementsResponse": {
+        "type": "object",
+        "required": ["unlockedBadges", "allBadges", "serverTime"],
+        "properties": {
+          "unlockedBadges": { "type": "array", "items": { "type": "string" } },
+          "allBadges": { "type": "array", "items": { "type": "object" } },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "CohortLeaderboardResponse": {
+        "type": "object",
+        "required": ["cohortName", "entries", "serverTime"],
+        "properties": {
+          "cohortName": { "type": "string" },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["rank", "displayAlias", "totalXp", "currentIdentity", "badgesCount"],
+              "properties": {
+                "rank": { "type": "integer" },
+                "displayAlias": { "type": "string" },
+                "totalXp": { "type": "integer" },
+                "currentIdentity": { "type": "string" },
+                "badgesCount": { "type": "integer" }
+              }
+            }
+          },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "JoinCohortRequest": {
+        "type": "object",
+        "required": ["accessCode"],
+        "properties": {
+          "accessCode": { "type": "string", "minLength": 6, "maxLength": 8 }
+        }
+      },
+      "TeacherCohortSummaryResponse": {
+        "type": "object",
+        "required": ["cohortId", "cohortName", "totalStudents", "chapter1CompletionPercent", "chapter2CompletionPercent", "serverTime"],
+        "properties": {
+          "cohortId": { "type": "string" },
+          "cohortName": { "type": "string" },
+          "totalStudents": { "type": "integer" },
+          "chapter1CompletionPercent": { "type": "number" },
+          "chapter2CompletionPercent": { "type": "number" },
+          "identityDistribution": { "type": "object" },
+          "studentsNeedingSupport": { "type": "array", "items": { "type": "object" } },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "TeacherResetCredentialRequest": {
+        "type": "object",
+        "required": ["reason"],
+        "properties": {
+          "reason": { "type": "string", "enum": ["lost_passphrase", "device_switch", "classroom_assist"] }
+        }
+      },
+      "TeacherResetCredentialResponse": {
+        "type": "object",
+        "required": ["success", "studentPlayerCode", "temporaryPassphrase", "serverTime"],
+        "properties": {
+          "success": { "type": "boolean" },
+          "studentPlayerCode": { "type": "string" },
+          "temporaryPassphrase": { "type": "string" },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ConsentStatusResponse": {
+        "type": "object",
+        "required": ["consents", "serverTime"],
+        "properties": {
+          "consents": { "type": "array", "items": { "type": "object" } },
+          "serverTime": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RecordConsentRequest": {
+        "type": "object",
+        "required": ["consentType", "granted"],
+        "properties": {
+          "consentType": { "type": "string", "enum": ["parental_consent", "student_assent", "tos_privacy"] },
+          "granted": { "type": "boolean" }
+        }
+      },
+      "PushSubscriptionRequest": {
+        "type": "object",
+        "required": ["endpoint", "keys", "installationId"],
+        "properties": {
+          "endpoint": { "type": "string" },
+          "installationId": { "type": "string" },
+          "keys": {
+            "type": "object",
+            "required": ["p256dh", "auth"],
+            "properties": {
+              "p256dh": { "type": "string" },
+              "auth": { "type": "string" }
+            }
+          }
+        }
+      },
+      "PushUnsubscribeRequest": {
+        "type": "object",
+        "required": ["endpoint"],
+        "properties": {
+          "endpoint": { "type": "string" }
+        }
+      },
+      "AnalyticsEventsRequest": {
+        "type": "object",
+        "required": ["events"],
+        "properties": {
+          "events": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": ["eventName", "category", "timestamp", "properties"],
+              "properties": {
+                "eventName": { "type": "string" },
+                "category": { "type": "string", "enum": ["engagement", "pedagogy", "performance"] },
+                "timestamp": { "type": "string", "format": "date-time" },
+                "properties": { "type": "object" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

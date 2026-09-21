@@ -11,8 +11,9 @@ Kamu bekerja di repository `finspire`. Tugasmu hanya mengubah kebutuhan produk m
 1. Baca seluruh `docs/antigravity/00-shared-contract.md` dan patuhi prioritas sumbernya.
 2. Baca `AGENTS.md`, `package.json`, dan inventaris singkat repository agar output sesuai kondisi nyata.
 3. Baca penuh sumber berikut, bukan hanya nama filenya:
-   - `../Finspire UIUX Storyboard Interaction Spec v1.0.pdf`
-   - `../prdterbaru.md`
+   - `../PRD Finspire v3.0.docx` sebagai sumber canonical produk dan chapter;
+   - `../prdterbaru.md` sebagai mirror Markdown yang harus konsisten dengan DOCX;
+   - `../Finspire UIUX Storyboard Interaction Spec v1.0.pdf` sebagai interaction spec, bukan sumber yang boleh mengganti makna chapter canonical;
    - bagian produk/teknis yang relevan dari `../REFERENSI PRESENTASI & PENJELASAN IDE.md`
    - gunakan `../FINSPIRE PRESENTATION.pdf` hanya sebagai konteks sekunder.
 4. Jangan membuka atau menyalin isi spreadsheet survei mentah. Cukup catat bahwa file tersebut excluded karena PII.
@@ -26,8 +27,10 @@ Jika PDF/sumber utama tidak dapat dibaca, atau ada diff tumpang tindih, STOP ses
 - Storyboard adalah interaction spec, bukan story script lengkap. Ia menyebut detail scene per hari/episode masih perlu dibuat terpisah.
 - Roadmap MVP memprioritaskan Chapter 1 dan 2; jangan membuat Chapter 3–5 seolah siap produksi.
 - “Rp10.000 untuk 7 hari” belum menjelaskan biaya apa yang termasuk. Tantangan tidak boleh memberi pesan bahwa kemiskinan adalah kegagalan pribadi.
-- Chapter 2 menyebut pemasukan Rp100.000/bulan selama 3 bulan, target blender Rp250.000 + dana darurat Rp50.000, tetapi juga contoh menabung 20%. Dua puluh persen dari Rp300.000 hanya Rp60.000; aturan ini belum konsisten.
+- Chapter 2 menetapkan pemasukan Rp100.000/bulan, target blender Rp250.000, dan dana darurat Rp50.000, tetapi tidak menetapkan durasi penyelesaian, alokasi kebutuhan bulanan, atau cara menangani pengeluaran tak terduga. Aturan 50/30/20 dan durasi tiga bulan dari PRD lama bukan lagi fakta canonical.
 - Angka BEP Chapter 4 belum memiliki biaya tetap, biaya variabel, dan volume yang cukup untuk dihitung. Itu future content gap, bukan sesuatu yang boleh ditebak.
+- Section chapter canonical, tabel level, data model, dan roadmap masih memiliki konflik jumlah/nama chapter serta syarat unlock. Catat konflik tersebut; jangan menyelesaikannya diam-diam.
+- Chapter 4 membuka kemungkinan aktivitas menghasilkan uang sungguhan, sedangkan Executive Summary menyatakan semua terjadi dalam simulasi. Perlakukan sebagai future decision, bukan izin memproses transaksi nyata pada pilot.
 - XP, koin, badge, streak, dan completion adalah engagement/progress, bukan bukti pemain sudah paham.
 
 ## Tujuan fase
@@ -61,7 +64,8 @@ Jangan bertanya satu per satu sebelum bekerja. Susun seluruh draft dan decision 
    - learning objectives per chapter;
    - aturan feedback yang menjelaskan alasan, bukan mempermalukan;
    - pre/post atau transfer question yang mengukur penerapan pada kasus baru;
-   - mini-game, boss challenge, retry, fail-soft, completion, reward, badge, unlock;
+   - mini-game, mastery gate, boss project/artifact, retry, fail-soft, completion, reward, identity, badge, unlock;
+   - kontrak artifact, rubric, evidence alasan pemain, transfer scenario, outcome tags, dan persistent-story carry-forward;
    - Foxy mood/state contract (`idle`, `thinking`, `happy`, `worried`, `sad`, `celebrate`) tanpa aset final;
    - safety rules untuk konten pinjol/judol, minors, dan financial disclaimer.
 4. `ECONOMY_AND_SCORING.md`
@@ -93,11 +97,12 @@ Schema dan data minimal harus memodelkan:
 
 - stable ID dan schema/content/protocol version;
 - locale `id-ID`, lifecycle status, release timestamp nullable, source references, dan assumption IDs;
-- chapter metadata, prerequisites, learning objectives, badge/unlock;
+- chapter metadata, prerequisites, learning objectives, identity/badge/unlock, dan outcome tags;
 - ordered scene graph dengan start node dan terminal;
 - narrative beats/dialogue, speaker, optional Foxy state, content warning bila relevan;
 - choices dengan raw player intent, consequence key, next node, feedback pedagogis, dan delta simulasi yang divalidasi;
-- minigame/boss definition, prompt, answer/rubric, attempts, pass rule, retry consequence;
+- minigame/boss definition, mastery artifact, field jawaban, prompt, rubric, evidence alasan pemain, attempts, pass rule, retry consequence, dan transfer scenario;
+- deklarasi producer/consumer untuk persistent-story outcome tanpa menggandakan saldo atau reward;
 - reward policy reference, transfer question, accessibility text;
 - asset logical keys saja—tidak boleh mengarang URL WebM final;
 - status `draft/proposed` pada semua konten yang belum disetujui.
@@ -106,12 +111,12 @@ Semua ID harus stabil dan human-readable, bukan bergantung pada array index. Nom
 
 ### C. Isi draft pilot
 
-1. Chapter 1 harus memiliki draft lengkap 7 hari/scene utama, jalur pilihan, consequence, microlearning, transfer question, dan Boss Challenge. Jelaskan dengan eksplisit bahwa Rp10.000 adalah **scope uang simulasi yang ditentukan**, bukan seluruh biaya hidup, sesuai working assumption yang direkomendasikan.
-2. Chapter 2 harus memiliki draft alur lengkap budgeting/dana darurat dan challenge 3 bulan. Buat tabel beberapa opsi rekonsiliasi untuk inkonsistensi target, pilih satu hanya sebagai `PROPOSED`, dan tautkan semua node yang bergantung padanya ke decision ID.
+1. Chapter 1 `KEEP IT ALIVE` harus memiliki draft lengkap 7 hari/scene utama, jalur pilihan, consequence, microlearning, transfer question, Mastery Gate, dan Boss Project `My 7-Day Money Survival Plan`. Artifact wajib memuat jumlah uang, kebutuhan, keinginan, batas pengeluaran, jumlah yang dipertahankan, serta tindakan menghadapi kebutuhan tak terduga; setelah dibuat, uji pada skenario transfer baru. Jelaskan dengan eksplisit bahwa Rp10.000 adalah **scope uang simulasi yang ditentukan**, bukan seluruh biaya hidup. Jangan memasukkan mekanik mencari pemasukan sebagai jalan keluar utama karena konsep tersebut baru diperkenalkan pada Chapter 4.
+2. Chapter 2 `PAY YOURSELF FIRST` harus memiliki draft alur lengkap tentang budgeting sederhana, dana darurat, delayed gratification, dan tabungan tujuan vs dana darurat. Boss Project `Build Your Financial Shield` wajib menghasilkan artifact berisi target tabungan, target dana darurat, jumlah yang disimpan setiap menerima uang, serta aturan penggunaan dana darurat. Jangan menjadikan 50/30/20, durasi tiga bulan, atau seluruh Rp100.000 sebagai pos tabungan khusus sebagai fakta. Buat opsi model/pacing yang matematis, pilih satu hanya sebagai `PROPOSED`, dan tautkan semua node yang bergantung padanya ke decision ID.
 3. Narasi boleh ditulis sebagai working draft yang layak direview, tetapi tidak boleh diklaim sebagai naskah asli/final pengguna.
 4. Setiap choice harus memberi trade-off yang masuk akal. Hindari satu jawaban “baik” yang terlalu jelas dan jawaban lain yang sekadar konyol.
 5. Setiap jalur harus berakhir; tidak boleh ada dangling reference, unreachable required node, atau reward loop.
-6. Chapter 3–5 hanya mendapat outline/gap register di dokumentasi. Jangan menghasilkan production content untuk fase tersebut.
+6. Chapter 3–5 hanya mendapat outline/gap register sesuai urutan canonical `DON'T ENTER THE TRAP`, `BUILD YOUR MONEY ENGINE`, dan `BUILD WEALTH SLOWLY`. Jangan menghasilkan production content untuk fase tersebut.
 
 ### D. Validator tanpa dependency baru
 
@@ -123,6 +128,10 @@ Buat `scripts/validate-content.mjs` menggunakan Node built-in saja. Validator ha
 - memastikan seluruh reference/next node/asset key/decision ID valid;
 - menemukan orphan/unreachable node dan branch tanpa terminal;
 - memeriksa nominal/delta integer serta kalkulasi saldo yang dideklarasikan;
+- memastikan inflow, transfer antar-pos, expense, asset acquisition, dan saldo akhir terkonservasi tanpa uang muncul dua kali;
+- benar-benar mengeksekusi validasi JSON Schema, bukan hanya memeriksa keberadaan/path file schema;
+- mengenumerasi seluruh jalur yang mungkin dan menolak terminal yang melanggar invariant saldo atau pass condition;
+- memeriksa kontrak mastery artifact, rubric, transfer scenario, serta producer/consumer outcome tags;
 - mendeteksi reward tanpa policy key;
 - gagal jika release draft diberi status `published` atau mengandung placeholder diam-diam seperti `TODO`, `TBD`, string kosong, atau URL aset final palsu;
 - menghasilkan output deterministic dan exit code non-zero saat gagal.
@@ -153,6 +162,7 @@ Fase hanya layak diminta review jika:
 
 - evidence, assumption, dan draft text dapat dibedakan;
 - Ch1 dan Ch2 structurally complete serta semua graph/reference valid;
+- mastery, artifact, identity, dan persistent-story contract kedua chapter dapat divalidasi;
 - seluruh hitungan yang dipakai draft tere-konsiliasi;
 - inkonsistensi sumber tidak disembunyikan;
 - semua keputusan yang memengaruhi backend memiliki decision ID;

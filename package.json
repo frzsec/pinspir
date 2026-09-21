@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "content:validate": "node scripts/validate-content.mjs",
+    "test:content": "node scripts/test-validator-regressions.mjs"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
