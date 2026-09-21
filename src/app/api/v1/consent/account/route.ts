@@ -1,15 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/db';
 import { getCurrentUserSession } from '@/lib/auth/get-current-user';
-import { getClearSessionCookieHeader } from '@/lib/auth/session';
 import { UnauthorizedError, formatErrorEnvelope } from '@/lib/errors';
 import { defaultClock } from '@/lib/clock';
+
+import { getAuth } from '@/lib/auth/auth';
 
 export async function DELETE(req: NextRequest) {
   try {
     const session = await getCurrentUserSession(req);
     if (!session) {
       throw new UnauthorizedError();
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const { passphrase } = body;
+    if (!passphrase || typeof passphrase !== 'string') {
+      return NextResponse.json({ success: false, code: 'MISSING_PASSPHRASE', message: 'Passphrase diperlukan untuk menghapus akun.' }, { status: 400 });
+    }
+
+    const auth = getAuth();
+    try {
+      // Re-authenticate using Better Auth's signInUsername API
+      const reAuthRes = await auth.api.signInUsername({
+         body: {
+            username: session.user.playerCode || '',
+            password: passphrase
+         }
+      });
+      if (!reAuthRes || !reAuthRes.user) {
+         throw new UnauthorizedError('Passphrase salah.');
+      }
+    } catch {
+      return NextResponse.json({ success: false, code: 'INVALID_CREDENTIALS', message: 'Passphrase salah.' }, { status: 401 });
     }
 
     const userId = session.user.id;
@@ -37,7 +60,7 @@ export async function DELETE(req: NextRequest) {
 
       await client.query('COMMIT');
 
-      const clearCookie = getClearSessionCookieHeader();
+      const clearCookie = 'finspire.session_token=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
 
       return NextResponse.json(
         {

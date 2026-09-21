@@ -17,13 +17,16 @@ export interface ChoiceOption {
   rewardPolicyKey?: string;
   deltaSimulatedMoney?: number;
   stateOperations?: {
+    inflow?: number;
+    outflow?: number;
     expense?: number;
-    income?: number;
-    allocation?: {
-      source?: string;
-      target?: string;
-      amount?: number;
-    };
+    debtIncurred?: number;
+    debtRepaid?: number;
+    transfers?: Array<{
+      source: keyof AccountState;
+      target: keyof AccountState;
+      amount: number;
+    }>;
   };
   requiredConditions?: {
     minCash?: number;
@@ -95,10 +98,18 @@ export interface MiniGame {
   simulationScenarios?: MiniGameSimulationScenario[];
 }
 
+export type BossEvalMode = 'BALANCE_INTEGRITY' | 'ARTIFACT_PRESENCE' | 'ARTIFACT_VALUE_MATCH' | 'TRANSFER_SCENARIO';
+
 export interface BossRubricItem {
   dimension: string;
   passCondition: string;
   weight: number;
+  evalMode: BossEvalMode;
+  evalParams?: {
+    requiredFields?: string[];
+    expectedValues?: Record<string, string | number | boolean>;
+    transferOptionId?: string;
+  };
 }
 
 export interface BossChallenge {

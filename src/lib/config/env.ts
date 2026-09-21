@@ -7,6 +7,8 @@ export interface AppConfig {
   databaseMaxConnections: number;
   databaseConnectionTimeoutMs: number;
   appUrl: string;
+  betterAuthSecret: string;
+  betterAuthUrl: string;
 }
 
 const REDACTED_VALUE = '[REDACTED]';
@@ -32,11 +34,28 @@ export function validateAndLoadConfig(overrides?: Partial<Record<string, string>
     throw new Error(`[Finspire Config] Invalid NODE_ENV: '${nodeEnv}'`);
   }
 
-  const databaseUrl =
-    env.DATABASE_URL ||
-    env.TEST_DATABASE_URL ||
-    'postgresql://postgres:fairuz@127.0.0.1:5432/finspire_test';
-
+  // D-01 fix: No hardcoded fallback credentials. Fail-fast if env var is missing.
+  // In test mode, TEST_DATABASE_URL is mandatory.
+  let databaseUrl: string;
+  if (nodeEnv === 'test') {
+    const testUrl = env.TEST_DATABASE_URL;
+    if (!testUrl) {
+      throw new Error(
+        '[Finspire Config] TEST_DATABASE_URL is required when NODE_ENV=test. ' +
+        'Never use a non-test database for automated tests.'
+      );
+    }
+    databaseUrl = testUrl;
+  } else {
+    const prodUrl = env.DATABASE_URL;
+    if (!prodUrl) {
+      throw new Error(
+        '[Finspire Config] DATABASE_URL is required. ' +
+        'Set this environment variable — do not use hardcoded fallback credentials.'
+      );
+    }
+    databaseUrl = prodUrl;
+  }
 
   const testDatabaseUrl = env.TEST_DATABASE_URL;
 
@@ -54,13 +73,25 @@ export function validateAndLoadConfig(overrides?: Partial<Record<string, string>
 
   const appUrl = env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
+  // Better Auth credentials — required in all envs
+  const betterAuthSecret = env.BETTER_AUTH_SECRET;
+  if (!betterAuthSecret) {
+    throw new Error(
+      '[Finspire Config] BETTER_AUTH_SECRET is required. ' +
+      'Set a random secret of at least 32 characters.'
+    );
+  }
+  const betterAuthUrl = env.BETTER_AUTH_URL || appUrl;
+
   return {
     nodeEnv,
-    databaseUrl: databaseUrl || '',
+    databaseUrl,
     testDatabaseUrl,
     databaseMaxConnections,
     databaseConnectionTimeoutMs,
     appUrl,
+    betterAuthSecret,
+    betterAuthUrl,
   };
 }
 
@@ -71,4 +102,9 @@ export function getAppConfig(): AppConfig {
     cachedConfig = validateAndLoadConfig();
   }
   return cachedConfig;
+}
+
+/** Reset cached config — for use in tests only. */
+export function _resetConfigCache(): void {
+  cachedConfig = null;
 }

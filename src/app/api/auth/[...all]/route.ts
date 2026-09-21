@@ -1,20 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUserSession } from '@/lib/auth/get-current-user';
+/**
+ * /api/auth/[...all]/route.ts
+ *
+ * D-11 fix: Replace stub echo handler with real Better Auth route handler.
+ * All Better Auth internal endpoints (sign-in, sign-out, session, etc.)
+ * are handled by toNextJsHandler(auth).
+ *
+ * Note: Finspire's pseudonymous auth flows (register, login) are at
+ * /api/v1/auth/pseudonymous/* and use auth.api.* internally.
+ * This catch-all route covers Better Auth's own protocol endpoints.
+ */
+import { toNextJsHandler } from 'better-auth/next-js';
+import { getAuth } from '@/lib/auth/auth';
 
-export async function GET(req: NextRequest) {
-  const session = await getCurrentUserSession(req);
-  return NextResponse.json({
-    status: 'ok',
-    authenticated: !!session,
-    user: session?.user || null,
-  });
-}
-
-export async function POST(req: NextRequest) {
-  const session = await getCurrentUserSession(req);
-  return NextResponse.json({
-    status: 'ok',
-    authenticated: !!session,
-    user: session?.user || null,
-  });
-}
+export const { GET, POST } = toNextJsHandler(getAuth());

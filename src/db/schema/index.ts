@@ -6,3 +6,4 @@ export * from './content';
 export * from './gameplay';
 export * from './projections';
 export * from './analytics';
+export * from './security';

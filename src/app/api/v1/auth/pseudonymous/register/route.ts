@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/db';
-import { generateRandomPlayerCode, playerCodeToTechnicalEmail } from '@/lib/auth/player-code';
-import { hashPassphrase, validatePassphrasePolicy } from '@/lib/auth/passphrase';
-import { createSession, getSessionCookieHeader } from '@/lib/auth/session';
+import { generateRandomPlayerCode } from '@/lib/auth/player-code';
+import { validatePassphrasePolicy } from '@/lib/auth/passphrase';
 import { checkRateLimit } from '@/lib/auth/rate-limiter';
 import { BadRequestError, formatErrorEnvelope } from '@/lib/errors';
-import { defaultClock } from '@/lib/clock';
+import { getAuth } from '@/lib/auth/auth';
 
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
-    const rateCheck = checkRateLimit(`register_${ip}`, 10, 10 * 60 * 1000);
+    const rateCheck = await checkRateLimit(`register_${ip}`, 10, 10 * 60 * 1000);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         formatErrorEnvelope(new BadRequestError('Terlalu banyak percobaan pendaftaran. Coba lagi nanti.')).envelope,
@@ -30,12 +29,11 @@ export async function POST(req: NextRequest) {
 
     const pool = getPool();
     const client = await pool.connect();
+    let playerCode = '';
 
     try {
       await client.query('BEGIN');
 
-      // Generate unique player code (retry up to 5 times in case of collision)
-      let playerCode = '';
       let isUnique = false;
       for (let i = 0; i < 5; i++) {
         const candidate = generateRandomPlayerCode();
@@ -51,92 +49,108 @@ export async function POST(req: NextRequest) {
         throw new Error('Gagal menghasilkan Player Code unik. Silakan coba kembali.');
       }
 
-      const technicalEmail = playerCodeToTechnicalEmail(playerCode);
-      const passwordHash = await hashPassphrase(passphrase);
-
-      // Insert User
-      const userRes = await client.query(
-        `INSERT INTO users (role, player_code, nickname, is_anonymous, created_at, updated_at)
-         VALUES ('student', $1, $2, false, NOW(), NOW())
-         RETURNING id, role, player_code, nickname;`,
-        [playerCode, nickname]
-      );
-      const user = userRes.rows[0];
-
-      // Insert Account (Better Auth credential compatible)
-      await client.query(
-        `INSERT INTO accounts (user_id, account_id, provider_id, password_hash, created_at, updated_at)
-         VALUES ($1, $2, 'credential', $3, NOW(), NOW());`,
-        [user.id, technicalEmail, passwordHash]
-      );
-
-      // If cohortCode is provided, enroll student
-      if (cohortCode) {
-        const cohortRes = await client.query(
-          `SELECT id FROM cohorts WHERE cohort_code = $1 AND is_active = true;`,
-          [cohortCode]
-        );
-        if (cohortRes.rowCount && cohortRes.rowCount > 0) {
-          const cohortId = cohortRes.rows[0].id;
-          await client.query(
-            `INSERT INTO cohort_members (cohort_id, user_id, joined_at)
-             VALUES ($1, $2, NOW())
-             ON CONFLICT (cohort_id, user_id) DO NOTHING;`,
-            [cohortId, user.id]
-          );
-        }
-      }
-
-      // Initialize default projection and streak
-      await client.query(
-        `INSERT INTO player_projections (user_id, total_xp, total_stars, completed_chapters, updated_at)
-         VALUES ($1, 0, 0, '[]'::jsonb, NOW())
-         ON CONFLICT (user_id) DO NOTHING;`,
-        [user.id]
-      );
-
-      await client.query(
-        `INSERT INTO player_streaks (user_id, current_streak, longest_streak, updated_at)
-         VALUES ($1, 0, 0, NOW())
-         ON CONFLICT (user_id) DO NOTHING;`,
-        [user.id]
-      );
-
       await client.query('COMMIT');
-
-      // Create session
-      const userAgent = req.headers.get('user-agent') || undefined;
-      const { token, expiresAt } = await createSession(user.id, ip, userAgent);
-
-      const cookieHeader = getSessionCookieHeader(token, expiresAt);
-
-      return NextResponse.json(
-        {
-          success: true,
-          user: {
-            id: user.id,
-            role: user.role,
-            playerCode: user.player_code,
-            nickname: user.nickname,
-          },
-          sessionToken: token,
-          expiresAt: expiresAt.toISOString(),
-          serverTime: defaultClock.nowIso(),
-        },
-        {
-          status: 201,
-          headers: {
-            'Set-Cookie': cookieHeader,
-            'Cache-Control': 'no-store, no-cache, must-revalidate',
-          },
-        }
-      );
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;
     } finally {
       client.release();
     }
+
+    const auth = getAuth();
+    
+    const authResponse = (await auth.api.signUpEmail({
+      body: {
+        email: `${playerCode.toLowerCase()}@finspire.invalid`,
+        password: passphrase,
+        name: nickname,
+        username: playerCode,
+      },
+      asResponse: true,
+    })) as Response;
+
+    if (!authResponse.ok) {
+      // Forward the error from Better Auth
+      const errBody = await authResponse.json();
+      return NextResponse.json(errBody, { status: authResponse.status });
+    }
+
+    // Now enrich the DB using the user ID from the response (we have to fetch the user by username to get ID)
+    const enrichClient = await pool.connect();
+    try {
+      await enrichClient.query('BEGIN');
+      
+      const userRes = await enrichClient.query('SELECT id FROM users WHERE username = $1;', [playerCode]);
+      if (userRes.rowCount === 0) {
+         throw new Error('User creation failed to propagate.');
+      }
+      const userId = userRes.rows[0].id;
+
+      await enrichClient.query(
+        `UPDATE users SET player_code = $1, nickname = $2 WHERE id = $3;`,
+        [playerCode, nickname, userId]
+      );
+
+      if (cohortCode) {
+        const cohortRes = await enrichClient.query(
+          `SELECT id FROM cohorts WHERE cohort_code = $1 AND is_active = true;`,
+          [cohortCode]
+        );
+        if (cohortRes.rowCount && cohortRes.rowCount > 0) {
+          const cohortId = cohortRes.rows[0].id;
+          await enrichClient.query(
+            `INSERT INTO cohort_members (cohort_id, user_id, joined_at)
+             VALUES ($1, $2, NOW())
+             ON CONFLICT (cohort_id, user_id) DO NOTHING;`,
+            [cohortId, userId]
+          );
+        }
+      }
+
+      await enrichClient.query(
+        `INSERT INTO player_projections (user_id, total_xp, total_stars, completed_chapters, updated_at)
+         VALUES ($1, 0, 0, '[]'::jsonb, NOW())
+         ON CONFLICT (user_id) DO NOTHING;`,
+        [userId]
+      );
+
+      await enrichClient.query(
+        `INSERT INTO player_streaks (user_id, current_streak, longest_streak, updated_at)
+         VALUES ($1, 0, 0, NOW())
+         ON CONFLICT (user_id) DO NOTHING;`,
+        [userId]
+      );
+
+      await enrichClient.query('COMMIT');
+    } catch (err) {
+      await enrichClient.query('ROLLBACK');
+      throw err;
+    } finally {
+      enrichClient.release();
+    }
+    
+    // Convert Web Response to NextResponse to allow Next.js routing logic
+    const headers = new Headers(authResponse.headers);
+    
+    // The response body from Better Auth is just `{ user, session, token }`
+    const authData = await authResponse.json();
+
+    return NextResponse.json(
+      {
+        success: true,
+        user: {
+          ...authData.user,
+          playerCode,
+          nickname,
+          role: 'student'
+        },
+        serverTime: new Date().toISOString()
+      },
+      {
+        status: 201,
+        headers: headers,
+      }
+    );
   } catch (err) {
     const { statusCode, envelope } = formatErrorEnvelope(err);
     return NextResponse.json(envelope, { status: statusCode });

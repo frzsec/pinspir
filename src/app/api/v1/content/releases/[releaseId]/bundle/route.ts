@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getReleaseBundle } from '@/lib/game/content-loader';
+import { getReleaseBundle, ensureContentLoaded } from '@/lib/game/content-loader';
 import { formatErrorEnvelope, NotFoundError } from '@/lib/errors';
+import crypto from 'node:crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,7 @@ export async function GET(
 ) {
   try {
     const { releaseId } = await params;
+    await ensureContentLoaded();
     const bundle = getReleaseBundle(releaseId);
 
     if (!bundle) {

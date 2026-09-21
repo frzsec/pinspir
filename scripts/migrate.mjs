@@ -9,11 +9,14 @@ const { Pool } = pg;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 
-// Read database URL from env or args
-const targetDbUrl = process.env.DATABASE_URL || process.argv[2];
+// D-01/D-02 fix: No argv fallback. DATABASE_URL must be set explicitly via environment.
+// Run: $env:DATABASE_URL="postgresql://..." ; node scripts/migrate.mjs
+const targetDbUrl = process.env.DATABASE_URL;
 
 if (!targetDbUrl) {
-  console.error('[Migrate] Error: Missing DATABASE_URL or database argument.');
+  console.error('[Migrate] Error: DATABASE_URL environment variable is required.');
+  console.error('  Set it explicitly: $env:DATABASE_URL="postgresql://user:pass@host/dbname"');
+  console.error('  Never rely on a hardcoded fallback.');
   process.exit(1);
 }
 

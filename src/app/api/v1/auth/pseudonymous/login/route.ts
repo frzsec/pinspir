@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '@/db';
 import { normalizePlayerCode } from '@/lib/auth/player-code';
-import { verifyPassphrase } from '@/lib/auth/passphrase';
-import { createSession, getSessionCookieHeader } from '@/lib/auth/session';
 import { checkRateLimit, resetRateLimit } from '@/lib/auth/rate-limiter';
-import { BadRequestError, UnauthorizedError, formatErrorEnvelope } from '@/lib/errors';
-import { defaultClock } from '@/lib/clock';
-
-const DUMMY_HASH = 'scrypt$0123456789abcdef0123456789abcdef$0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+import { BadRequestError, formatErrorEnvelope } from '@/lib/errors';
+import { getAuth } from '@/lib/auth/auth';
+import { getDb } from '@/db';
+import { users } from '@/db/schema/users';
+import { eq } from 'drizzle-orm';
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     const playerCode = normalizePlayerCode(rawPlayerCode);
     const rateLimitKey = `login_${ip}_${playerCode}`;
-    const rateCheck = checkRateLimit(rateLimitKey, 5, 10 * 60 * 1000);
+    const rateCheck = await checkRateLimit(rateLimitKey, 5, 10 * 60 * 1000);
 
     if (!rateCheck.allowed) {
       return NextResponse.json(
@@ -40,56 +38,54 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const pool = getPool();
-    const userRes = await pool.query(
-      `SELECT u.id, u.role, u.player_code, u.nickname, u.deleted_at, a.password_hash
-       FROM users u
-       LEFT JOIN accounts a ON a.user_id = u.id AND a.provider_id = 'credential'
-       WHERE u.player_code = $1 AND u.deleted_at IS NULL;`,
-      [playerCode]
-    );
+    const auth = getAuth();
 
-    let isValid = false;
-    let userRecord = null;
+    // Call Better Auth sign-in
+    const authResponse = (await auth.api.signInUsername({
+      body: {
+        username: playerCode,
+        password: passphrase,
+      },
+      asResponse: true,
+      headers: req.headers,
+    })) as Response;
 
-    if (userRes.rowCount && userRes.rowCount > 0 && userRes.rows[0].password_hash) {
-      userRecord = userRes.rows[0];
-      isValid = await verifyPassphrase(passphrase, userRecord.password_hash);
-    } else {
-      // Dummy check to protect against timing attacks & user enumeration
-      await verifyPassphrase(passphrase, DUMMY_HASH);
-    }
-
-    if (!isValid || !userRecord) {
-      throw new UnauthorizedError('Player Code atau kata sandi tidak valid.');
+    if (!authResponse.ok) {
+       // Dummy response body is returned by better auth for errors
+       const errBody = await authResponse.json().catch(() => null);
+       return NextResponse.json(
+         formatErrorEnvelope(new BadRequestError('Player Code atau kata sandi tidak valid.')).envelope,
+         { status: 401 }
+       );
     }
 
     // Reset rate limit on successful login
-    resetRateLimit(rateLimitKey);
+    await resetRateLimit(rateLimitKey);
 
-    const userAgent = req.headers.get('user-agent') || undefined;
-    const { token, expiresAt } = await createSession(userRecord.id, ip, userAgent);
-    const cookieHeader = getSessionCookieHeader(token, expiresAt);
+    const authData = await authResponse.json();
+
+    // Fetch the enriched user to return
+    const db = getDb();
+    const dbUser = await db.query.users.findFirst({
+       where: eq(users.id, authData.user.id),
+    });
+
+    const headers = new Headers(authResponse.headers);
 
     return NextResponse.json(
       {
         success: true,
         user: {
-          id: userRecord.id,
-          role: userRecord.role,
-          playerCode: userRecord.player_code,
-          nickname: userRecord.nickname,
+          id: dbUser?.id || authData.user.id,
+          role: dbUser?.role || 'student',
+          playerCode: dbUser?.playerCode || playerCode,
+          nickname: dbUser?.nickname || authData.user.name,
         },
-        sessionToken: token,
-        expiresAt: expiresAt.toISOString(),
-        serverTime: defaultClock.nowIso(),
+        serverTime: new Date().toISOString(),
       },
       {
         status: 200,
-        headers: {
-          'Set-Cookie': cookieHeader,
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
-        },
+        headers: headers,
       }
     );
   } catch (err) {

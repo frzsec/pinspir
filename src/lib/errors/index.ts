@@ -102,6 +102,8 @@ export function formatErrorEnvelope(
   }
 
   // Generic/Internal error - do not leak stack or internal details in production
+  console.error('[formatErrorEnvelope] Uncaught error:', error);
+
   const envelope: ErrorEnvelope = {
     success: false,
     error: {

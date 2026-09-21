@@ -8,10 +8,14 @@ const { Pool } = pg;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..');
 
-const targetDbUrl = process.env.DATABASE_URL || process.argv[2];
+// D-01/D-02 fix: No argv fallback. DATABASE_URL must be set explicitly via environment.
+// Run: $env:DATABASE_URL="postgresql://..." ; node scripts/seed-pilot-content.mjs
+const targetDbUrl = process.env.DATABASE_URL;
 
 if (!targetDbUrl) {
-  console.error('[Seed] Error: Missing DATABASE_URL or database argument.');
+  console.error('[Seed] Error: DATABASE_URL environment variable is required.');
+  console.error('  Set it explicitly: $env:DATABASE_URL="postgresql://user:pass@host/dbname"');
+  console.error('  Never rely on a hardcoded fallback.');
   process.exit(1);
 }
 
@@ -73,29 +77,35 @@ async function runSeed() {
     console.log(`[Seed] Reference school seeded: ${schoolRes.rows[0].name} (${schoolRes.rows[0].id})`);
 
     // 2. Ingest Content Release pilot-v1-draft
-    const releaseSql = `
-      INSERT INTO content_releases (
-        id, release_id, schema_version, title, status, manifest_json, manifest_sha256, activated_at, created_at, updated_at
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())
-      ON CONFLICT (release_id) DO NOTHING
-      RETURNING id, release_id, status;
-    `;
+    const checkSql = `SELECT manifest_sha256 FROM content_releases WHERE release_id = $1`;
+    const checkRes = await client.query(checkSql, [manifestJson.releaseId]);
 
-    const releaseRes = await client.query(releaseSql, [
-      '00000000-0000-4000-8000-000000000010',
-      manifestJson.releaseId,
-      manifestJson.schemaVersion || '2020-12',
-      manifestJson.title,
-      'active',
-      manifestJson,
-      manifestSha256,
-    ]);
-
-    if (releaseRes.rowCount > 0) {
-      console.log(`[Seed] Content release inserted: ${releaseRes.rows[0].release_id} (status: ${releaseRes.rows[0].status})`);
+    if (checkRes.rowCount > 0) {
+      const existingSha = checkRes.rows[0].manifest_sha256;
+      if (existingSha !== manifestSha256) {
+        throw new Error(`[Seed] FATAL CONFLICT: Release ${manifestJson.releaseId} exists with different SHA-256 (DB: ${existingSha}, Disk: ${manifestSha256})`);
+      }
+      console.log(`[Seed] Content release ${manifestJson.releaseId} already exists and hash matches; skipped insertion (idempotent).`);
     } else {
-      console.log(`[Seed] Content release ${manifestJson.releaseId} already exists; skipped insertion (idempotent).`);
+      const releaseSql = `
+        INSERT INTO content_releases (
+          id, release_id, schema_version, title, status, manifest_json, manifest_sha256, activated_at, created_at, updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())
+        RETURNING id, release_id, status;
+      `;
+
+      const releaseRes = await client.query(releaseSql, [
+        '00000000-0000-4000-8000-000000000010',
+        manifestJson.releaseId,
+        manifestJson.schemaVersion || '2020-12',
+        manifestJson.title,
+        'active',
+        manifestJson,
+        manifestSha256,
+      ]);
+
+      console.log(`[Seed] Content release inserted: ${releaseRes.rows[0].release_id} (status: ${releaseRes.rows[0].status})`);
     }
 
     await client.query('COMMIT');

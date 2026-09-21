@@ -1,6 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { eq } from 'drizzle-orm';
+import { db } from '@/db';
+import { contentReleases } from '@/db/schema/content';
 import type {
   ContentManifest,
   Chapter,
@@ -15,18 +18,39 @@ import type {
 let cachedManifest: ContentManifest | null = null;
 const cachedChapters: Map<string, Chapter> = new Map();
 let cachedBundleEtag: string | null = null;
+let activeReleaseIdCache: string | null = null;
 
 function getRepoRoot(): string {
   return process.cwd();
 }
 
-function loadContentFiles(): void {
-  if (cachedManifest && cachedChapters.size > 0) {
+export async function ensureContentLoaded(): Promise<void> {
+  // Check active release from DB
+  const activeReleaseRows = await db
+    .select()
+    .from(contentReleases)
+    .where(eq(contentReleases.status, 'active'))
+    .limit(1);
+
+  if (activeReleaseRows.length === 0) {
+    throw new Error('No active content release found in database');
+  }
+
+  const activeRelease = activeReleaseRows[0];
+  const releaseId = activeRelease.releaseId;
+  const dbManifestSha256 = activeRelease.manifestSha256;
+
+  // If already loaded and release ID matches, return
+  if (cachedManifest && activeReleaseIdCache === releaseId && cachedChapters.size > 0) {
     return;
   }
 
+  // Clear cache for reload
+  cachedChapters.clear();
+  cachedManifest = null;
+
   const root = getRepoRoot();
-  const releaseDir = path.resolve(root, 'content/releases/pilot-v1-draft');
+  const releaseDir = path.resolve(root, 'content/releases', releaseId);
   const manifestPath = path.resolve(releaseDir, 'manifest.json');
 
   if (!fs.existsSync(manifestPath)) {
@@ -35,9 +59,10 @@ function loadContentFiles(): void {
 
   const manifestRaw = fs.readFileSync(manifestPath, 'utf8');
   cachedManifest = JSON.parse(manifestRaw) as ContentManifest;
+  activeReleaseIdCache = releaseId;
 
-  const hasher = crypto.createHash('sha256');
-  hasher.update(manifestRaw);
+  const bundleHasher = crypto.createHash('sha256');
+  bundleHasher.update(manifestRaw);
 
   for (const fileName of cachedManifest.chapterFiles) {
     const chPath = path.resolve(releaseDir, fileName);
@@ -45,29 +70,41 @@ function loadContentFiles(): void {
       throw new Error(`Chapter file ${fileName} not found at ${chPath}`);
     }
     const chRaw = fs.readFileSync(chPath, 'utf8');
-    hasher.update(chRaw);
+    bundleHasher.update(chRaw);
     const chapter = JSON.parse(chRaw) as Chapter;
     cachedChapters.set(chapter.chapterId, chapter);
   }
 
-  cachedBundleEtag = `W/"${hasher.digest('hex').slice(0, 16)}"`;
+  const computedBundleSha256 = bundleHasher.digest('hex');
+
+  // Verify full bundle integrity (manifest + chapters) against manifestSha256
+  // This satisfies: "Terapkan validasi SHA-256 digest untuk manifest dan seluruh file chapters"
+  if (computedBundleSha256 !== dbManifestSha256) {
+    console.error(`[Content Loader] Bundle SHA-256 Mismatch! DB: ${dbManifestSha256} | Computed: ${computedBundleSha256}`);
+    throw new Error(`Content integrity failure: Bundle SHA-256 mismatch for release ${releaseId}`);
+  }
+
+  cachedBundleEtag = `W/"${computedBundleSha256.slice(0, 16)}"`;
+}
+
+function ensureLoadedSync(): void {
+  if (!cachedManifest) {
+    throw new Error('Content not initialized. Call ensureContentLoaded() first.');
+  }
 }
 
 export function getActiveReleaseManifest(): ContentManifest {
-  loadContentFiles();
-  if (!cachedManifest) {
-    throw new Error('Manifest not loaded');
-  }
-  return cachedManifest;
+  ensureLoadedSync();
+  return cachedManifest!;
 }
 
 export function getChapter(chapterId: string): Chapter | null {
-  loadContentFiles();
+  ensureLoadedSync();
   return cachedChapters.get(chapterId) ?? null;
 }
 
 export function getAllChapters(): Chapter[] {
-  loadContentFiles();
+  ensureLoadedSync();
   return Array.from(cachedChapters.values()).sort((a, b) => a.chapterIndex - b.chapterIndex);
 }
 
@@ -103,7 +140,7 @@ export function getReleaseBundle(releaseId: string): {
   chapters: Record<string, Chapter>;
   etag: string;
 } | null {
-  loadContentFiles();
+  ensureLoadedSync();
   if (!cachedManifest || cachedManifest.releaseId !== releaseId) {
     return null;
   }

@@ -4,12 +4,20 @@ import pg from 'pg';
 import crypto from 'node:crypto';
 import { NextRequest } from 'next/server';
 
-const testDbUrl = process.env.TEST_DATABASE_URL || 'postgresql://postgres:fairuz@127.0.0.1:5432/finspire_test';
+// D-02b: Fail-fast if TEST_DATABASE_URL is missing or not a _test database.
+const testDbUrl = process.env.TEST_DATABASE_URL;
+if (!testDbUrl) {
+  throw new Error('[DB Guard] TEST_DATABASE_URL is required. Set it before running integration tests.');
+}
+if (!new URL(testDbUrl).pathname.replace(/^\//, '').endsWith('_test')) {
+  throw new Error(`[DB Guard] TEST_DATABASE_URL must point to a database ending with _test. Got: ${new URL(testDbUrl).pathname}`);
+}
 process.env.DATABASE_URL = testDbUrl;
 process.env.NODE_ENV = 'test';
 
 const { Pool } = pg;
 const pool = new Pool({ connectionString: testDbUrl });
+process.env.BETTER_AUTH_SECRET = 'test_secret_for_better_auth_123456';
 
 // Import route handlers
 import { POST as registerRoute } from '../../src/app/api/v1/auth/pseudonymous/register/route.ts';
@@ -19,13 +27,15 @@ import { GET as bundleRoute } from '../../src/app/api/v1/content/releases/[relea
 import { GET as chaptersRoute } from '../../src/app/api/v1/content/chapters/route.ts';
 import { GET as leaderboardRoute } from '../../src/app/api/v1/schools/cohorts/[id]/leaderboard/route.ts';
 import { POST as analyticsRoute } from '../../src/app/api/v1/analytics/events/route.ts';
-import { GET as exportRoute } from '../../src/app/api/v1/consent/export/route.ts';
+import { POST as exportRoute } from '../../src/app/api/v1/consent/export/route.ts';
 import { DELETE as deleteAccountRoute } from '../../src/app/api/v1/consent/account/route.ts';
 import { POST as grantConsentRoute } from '../../src/app/api/v1/consent/grant/route.ts';
 import { POST as joinCohortRoute } from '../../src/app/api/v1/schools/cohorts/join/route.ts';
 
+import { ensureContentLoaded } from '../../src/lib/game/content-loader';
 
 test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
+  await ensureContentLoaded();
   let sessionCookie = '';
   let studentUser = null;
   let referenceCohortId = null;
@@ -176,11 +186,19 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
         actionType: 'START_PLAYTHROUGH',
         payload: { chapterId: 'chapter-01' },
       },
-      // 7 Story Choices
+      // Microlearning completion (Must be BEFORE making a choice on the scene)
       {
         actionId: crypto.randomUUID(),
         attemptId,
         clientSequence: 2,
+        actionType: 'COMPLETE_MICROLEARNING',
+        sceneNodeId: 'CH1-SC-01',
+      },
+      // 7 Story Choices
+      {
+        actionId: crypto.randomUUID(),
+        attemptId,
+        clientSequence: 3,
         actionType: 'CHOICE_SELECTED',
         sceneNodeId: 'CH1-SC-01',
         choiceId: 'ch1-c1-esteh', // -2500, saldo 7500
@@ -188,7 +206,7 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
       {
         actionId: crypto.randomUUID(),
         attemptId,
-        clientSequence: 3,
+        clientSequence: 4,
         actionType: 'CHOICE_SELECTED',
         sceneNodeId: 'CH1-SC-02',
         choiceId: 'ch1-c2-bayarfotokopi', // -2000, saldo 5500
@@ -196,7 +214,7 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
       {
         actionId: crypto.randomUUID(),
         attemptId,
-        clientSequence: 4,
+        clientSequence: 5,
         actionType: 'CHOICE_SELECTED',
         sceneNodeId: 'CH1-SC-03',
         choiceId: 'ch1-c3-tolakdiskon', // 0, saldo 5500
@@ -204,7 +222,7 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
       {
         actionId: crypto.randomUUID(),
         attemptId,
-        clientSequence: 5,
+        clientSequence: 6,
         actionType: 'CHOICE_SELECTED',
         sceneNodeId: 'CH1-SC-04',
         choiceId: 'ch1-c4-kertasbekas', // 0, saldo 5500
@@ -212,7 +230,7 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
       {
         actionId: crypto.randomUUID(),
         attemptId,
-        clientSequence: 6,
+        clientSequence: 7,
         actionType: 'CHOICE_SELECTED',
         sceneNodeId: 'CH1-SC-05',
         choiceId: 'ch1-c5-pinjampensil', // 0, saldo 5500
@@ -220,27 +238,18 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
       {
         actionId: crypto.randomUUID(),
         attemptId,
-        clientSequence: 7,
+        clientSequence: 8,
         actionType: 'CHOICE_SELECTED',
         sceneNodeId: 'CH1-SC-06',
         choiceId: 'ch1-c6-maincatur', // 0, saldo 5500
       },
-
-      {
-        actionId: crypto.randomUUID(),
-        attemptId,
-        clientSequence: 8,
-        actionType: 'CHOICE_SELECTED',
-        sceneNodeId: 'CH1-SC-07',
-        choiceId: 'ch1-c7-menuju-pass', // 0, saldo 2000
-      },
-      // Microlearning completion
       {
         actionId: crypto.randomUUID(),
         attemptId,
         clientSequence: 9,
-        actionType: 'COMPLETE_MICROLEARNING',
-        sceneNodeId: 'ML-CH1-01',
+        actionType: 'CHOICE_SELECTED',
+        sceneNodeId: 'CH1-SC-07',
+        choiceId: 'ch1-c7-menuju-pass', // 0, saldo 2000
       },
       // Mini-game Sortir Cepat
       {
@@ -273,9 +282,12 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
         sceneNodeId: 'BOSS-CH1-SURVIVAL',
         payload: {
           artifactData: {
-            f1: 'Rp10.000',
-            f2: 'Skala Prioritas',
-            f3: 'Mitigasi Saldo Non-Negatif',
+            total_money: 10000,
+            reserve_target: 2000,
+            core_needs: ['Fotokopi', 'Angkot'],
+            wants_delayed: ['Boba', 'Skin Game'],
+            spending_limit: 1500,
+            unforeseen_action: 'Gunakan cadangan',
           },
           transferOptionId: 'tq1-opt2',
         },
@@ -351,9 +363,12 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
         sceneNodeId: 'BOSS-CH2-SHIELD',
         payload: {
           artifactData: {
-            f1: 'Target Blender Rp250.000',
-            f2: 'Alokasi Pay Yourself First',
-            f3: 'Protokol Perlindungan Finansial',
+            savings_goal: 250000,
+            emergency_target: 50000,
+            monthly_allocation_rule: 'Sisihkan minimal 20% ke dana darurat dan 70% ke tabungan impian di awal penerimaan',
+            cash_buffer: '<= 15000',
+            emergency_criteria: 'Hanya untuk kondisi mendesak, penting, dan tak terduga (kesehatan, keselamatan, studi wajib)',
+            replenishment_rule: 'Prioritaskan pemulihan dana darurat pada alokasi bulan berikutnya sebelum memperbesar belanja lain',
           },
           transferOptionId: 'tq2-opt1',
         },
@@ -412,7 +427,9 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
 
   await t.test('10. Data Portability Export & Account Deletion', async () => {
     // Export own data
-    const expReq = makeAuthReq('http://localhost:3000/api/v1/consent/export');
+    const expReq = makeAuthReq('http://localhost:3000/api/v1/consent/export', 'POST', {
+      passphrase: 'KataSandiKuat2026'
+    });
     const expRes = await exportRoute(expReq);
     assert.equal(expRes.status, 200);
 
@@ -423,7 +440,9 @@ test('Fase 07: Headless Journey E2E Integration Suite', async (t) => {
 
 
     // Delete own account
-    const delReq = makeAuthReq('http://localhost:3000/api/v1/consent/account', 'DELETE');
+    const delReq = makeAuthReq('http://localhost:3000/api/v1/consent/account', 'DELETE', {
+      passphrase: 'KataSandiKuat2026'
+    });
     const delRes = await deleteAccountRoute(delReq);
     assert.equal(delRes.status, 200);
 

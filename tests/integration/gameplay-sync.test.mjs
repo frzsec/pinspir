@@ -2,18 +2,35 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import pg from 'pg';
 import crypto from 'node:crypto';
-import { processSyncBatch } from '../../src/lib/game/sync-handler.ts';
-import { rebuildPlayerProjection } from '../../src/lib/game/projection-rebuilder.ts';
-import { calculateStreak } from '../../src/lib/game/streak-engine.ts';
+import { processSyncBatch } from '../../src/lib/game/sync-handler';
+import { rebuildPlayerProjection } from '../../src/lib/game/projection-rebuilder';
+import { calculateStreak } from '../../src/lib/game/streak-engine';
 import {
   evaluateSortirCepat,
   evaluateDanaDarurat,
   evaluateBossChallenge,
-} from '../../src/lib/game/narrative-engine.ts';
-import { getChapter, getMiniGame, getBossChallenge } from '../../src/lib/game/content-loader.ts';
+} from '../../src/lib/game/narrative-engine';
+import { getChapter, getMiniGame, getBossChallenge, ensureContentLoaded } from '../../src/lib/game/content-loader';
 
 const { Pool } = pg;
-const testDbUrl = process.env.TEST_DATABASE_URL || 'postgresql://postgres:fairuz@127.0.0.1:5432/finspire_test';
+
+// D-02b: Fail-fast if TEST_DATABASE_URL is missing or not a _test database.
+const testDbUrl = process.env.TEST_DATABASE_URL;
+if (!testDbUrl) {
+  throw new Error('[DB Guard] TEST_DATABASE_URL is required. Set it before running integration tests.');
+}
+if (!new URL(testDbUrl).pathname.replace(/^\//, '').endsWith('_test')) {
+  throw new Error(`[DB Guard] TEST_DATABASE_URL must point to a database ending with _test. Got: ${new URL(testDbUrl).pathname}`);
+}
+process.env.DATABASE_URL = testDbUrl;
+process.env.NODE_ENV = 'test';
+process.env.BETTER_AUTH_SECRET = 'test_secret_for_better_auth_123456';
+
+import { before } from 'node:test';
+before(async () => {
+  await ensureContentLoaded();
+});
+
 const pool = new Pool({ connectionString: testDbUrl });
 
 test('Fase 05: Game Engine, Idempotency, and Concurrency Integration Tests', async (t) => {
@@ -73,9 +90,12 @@ test('Fase 05: Game Engine, Idempotency, and Concurrency Integration Tests', asy
     assert.ok(boss1, 'Boss 1 exists');
     const bossEval = evaluateBossChallenge(ch1, boss1, {
       artifactData: {
-        field1: 'Target Rp10.000',
-        field2: 'Batas Belanja',
-        field3: 'Protokol Darurat',
+        total_money: 10000,
+        reserve_target: 2000,
+        core_needs: ['Fotokopi', 'Angkot'],
+        wants_delayed: ['Boba', 'Skin Game'],
+        spending_limit: 1500,
+        unforeseen_action: 'Gunakan cadangan',
       },
       transferOptionId: 'tq1-opt2',
       accounts: { availableCash: 7500, goalSavings: 0, emergencyFund: 0, debt: 0 },
@@ -346,9 +366,12 @@ test('Fase 05: Game Engine, Idempotency, and Concurrency Integration Tests', asy
         sceneNodeId: 'BOSS-CH1-SURVIVAL',
         payload: {
           artifactData: {
-            field1: 'Rp10.000',
-            field2: 'Kebutuhan Prioritas',
-            field3: 'Tanpa Saldo Minus',
+            total_money: 10000,
+            reserve_target: 2000,
+            core_needs: ['Fotokopi', 'Angkot'],
+            wants_delayed: ['Boba', 'Skin Game'],
+            spending_limit: 1500,
+            unforeseen_action: 'Gunakan cadangan',
           },
           transferOptionId: 'tq1-opt2',
         },

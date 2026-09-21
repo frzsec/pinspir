@@ -4,11 +4,35 @@ import { getCurrentUserSession } from '@/lib/auth/get-current-user';
 import { UnauthorizedError, formatErrorEnvelope } from '@/lib/errors';
 import { defaultClock } from '@/lib/clock';
 
-export async function GET(req: NextRequest) {
+import { getAuth } from '@/lib/auth/auth';
+
+export async function POST(req: NextRequest) {
   try {
     const session = await getCurrentUserSession(req);
     if (!session) {
       throw new UnauthorizedError();
+    }
+    
+    const body = await req.json().catch(() => ({}));
+    const { passphrase } = body;
+    if (!passphrase || typeof passphrase !== 'string') {
+      return NextResponse.json({ success: false, code: 'MISSING_PASSPHRASE', message: 'Passphrase diperlukan untuk mengekspor data.' }, { status: 400 });
+    }
+
+    const auth = getAuth();
+    try {
+      // Re-authenticate using Better Auth's signInUsername API
+      const reAuthRes = await auth.api.signInUsername({
+         body: {
+            username: session.user.playerCode || '',
+            password: passphrase
+         }
+      });
+      if (!reAuthRes || !reAuthRes.user) {
+         throw new UnauthorizedError('Passphrase salah.');
+      }
+    } catch {
+      return NextResponse.json({ success: false, code: 'INVALID_CREDENTIALS', message: 'Passphrase salah.' }, { status: 401 });
     }
 
     const userId = session.user.id;

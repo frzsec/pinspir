@@ -1,9 +1,11 @@
 import { eq, and } from 'drizzle-orm';
 import { db } from '@/db';
-import { playthroughAttempts, gameplayActions, rewardLedger } from '@/db/schema/gameplay';
+import { playthroughAttempts, gameplayActions, rewardLedger, microlearningActions } from '@/db/schema/gameplay';
 import { playerStreaks } from '@/db/schema/projections';
+import { contentReleases } from '@/db/schema/content';
+import { sql } from 'drizzle-orm';
 import { getSystemClock } from '@/lib/clock';
-import { getChapter, getMiniGame, getBossChallenge } from './content-loader';
+import { getChapter, getMiniGame, getBossChallenge, ensureContentLoaded, getReleaseBundle } from './content-loader';
 import {
   computeInitialAccounts,
   evaluateChoiceTransition,
@@ -32,8 +34,23 @@ export async function processSyncBatch(
   const todayWib = clock.todayWib();
   const serverTime = clock.now().toISOString();
 
+  // Ensure content is loaded into memory before processing any sync actions
+  await ensureContentLoaded();
+
   // Process all actions within an atomic PostgreSQL transaction
   return await db.transaction(async (tx) => {
+    // Lookup active release
+    const activeReleaseRows = await tx
+      .select()
+      .from(contentReleases)
+      .where(eq(contentReleases.status, 'published'))
+      .limit(1);
+
+    if (activeReleaseRows.length === 0) {
+      throw new Error('No active content release');
+    }
+    const activeReleaseId = activeReleaseRows[0].releaseId;
+
     const results: ActionProcessingResult[] = [];
     let lastAttemptId: string | null = null;
     let lastChapterId: string | null = null;
@@ -53,6 +70,24 @@ export async function processSyncBatch(
         choiceId,
         payload = {},
       } = action;
+
+      // Validate clientOccurredAt (D-19)
+      if (action.clientOccurredAt) {
+        const ts = new Date(action.clientOccurredAt);
+        if (isNaN(ts.getTime())) {
+          results.push({ actionId, status: 'rejected', code: 'INVALID_TIMESTAMP', message: 'Format clientOccurredAt tidak valid', retryable: false });
+          continue;
+        }
+        const nowMs = clock.now().getTime();
+        if (ts.getTime() > nowMs + 60 * 60 * 1000) {
+          results.push({ actionId, status: 'rejected', code: 'FUTURE_TIMESTAMP', message: 'Timestamp clientOccurredAt terlalu di masa depan', retryable: false });
+          continue;
+        }
+        if (ts.getTime() < nowMs - 7 * 24 * 60 * 60 * 1000) {
+          results.push({ actionId, status: 'rejected', code: 'TIMESTAMP_TOO_OLD', message: 'Timestamp clientOccurredAt terlalu usang', retryable: false });
+          continue;
+        }
+      }
 
       // 1. Idempotency check: Action ID uniqueness
       const existingAction = await tx
@@ -104,16 +139,37 @@ export async function processSyncBatch(
           continue;
         }
 
+        // Check prerequisites (D-06)
+        const projectionForPrereq = await rebuildPlayerProjection(tx, userId);
+        let prereqMet = true;
+        for (const prereq of chapter.prerequisites) {
+          if (!projectionForPrereq.completedChapters.includes(prereq)) {
+            prereqMet = false;
+            results.push({
+              actionId,
+              status: 'rejected',
+              code: 'PREREQUISITE_NOT_MET',
+              message: `Syarat bab '${prereq}' belum diselesaikan.`,
+              retryable: false,
+            });
+            break;
+          }
+        }
+        if (!prereqMet) continue;
+
         let targetAttemptId = inputAttemptId;
         if (!targetAttemptId) {
           const insertedAttempt = await tx
             .insert(playthroughAttempts)
             .values({
               userId,
-              releaseId: 'pilot-v1-draft',
+              releaseId: activeReleaseId,
               chapterId,
               attemptNumber: 1,
               status: 'in_progress',
+              canonicalStateJson: currentAccounts as unknown as Record<string, unknown>,
+              currentNodeId: chapter.entrypointNodeId,
+              pinnedReleaseId: activeReleaseId,
             })
             .returning({ id: playthroughAttempts.id });
           targetAttemptId = insertedAttempt[0].id;
@@ -124,10 +180,13 @@ export async function processSyncBatch(
             .values({
               id: targetAttemptId,
               userId,
-              releaseId: 'pilot-v1-draft',
+              releaseId: activeReleaseId,
               chapterId,
               attemptNumber: 1,
               status: 'in_progress',
+              canonicalStateJson: currentAccounts as unknown as Record<string, unknown>,
+              currentNodeId: chapter.entrypointNodeId,
+              pinnedReleaseId: activeReleaseId,
             })
             .onConflictDoNothing();
         }
@@ -145,8 +204,13 @@ export async function processSyncBatch(
 
         lastAttemptId = targetAttemptId;
         lastChapterId = chapterId;
-        lastNodeId = chapter.entrypointNodeId;
         currentAccounts = computeInitialAccounts(chapter);
+
+        // Update attempt with canonical state if it was inserted via onConflictDoNothing but we are processing START
+        await tx.update(playthroughAttempts).set({
+          canonicalStateJson: currentAccounts as unknown as Record<string, unknown>,
+          currentNodeId: chapter.entrypointNodeId
+        }).where(eq(playthroughAttempts.id, targetAttemptId));
 
         results.push({
           actionId,
@@ -168,7 +232,7 @@ export async function processSyncBatch(
       }
 
       // All remaining actions require an attemptId
-      const attemptId = inputAttemptId || lastAttemptId;
+      const attemptId: string | undefined = inputAttemptId || (lastAttemptId ?? undefined);
       if (!attemptId) {
         results.push({
           actionId,
@@ -189,7 +253,8 @@ export async function processSyncBatch(
             eq(playthroughAttempts.id, attemptId),
             eq(playthroughAttempts.userId, userId)
           )
-        );
+        )
+        .for('update'); // Lock for update to prevent concurrent updates on canonical state
 
       if (attemptRows.length === 0) {
         results.push({
@@ -202,27 +267,53 @@ export async function processSyncBatch(
         continue;
       }
 
-      const attempt = attemptRows[0];
-      const chapter = getChapter(attempt.chapterId);
-      if (!chapter) {
-        results.push({
-          actionId,
-          status: 'rejected',
-          code: 'CHAPTER_NOT_FOUND',
-          message: 'Bab dari attempt tidak valid.',
-          retryable: false,
-        });
-        continue;
-      }
-
+      const attempt: typeof attemptRows[0] = attemptRows[0];
       lastAttemptId = attempt.id;
       lastChapterId = attempt.chapterId;
-      if (!currentAccounts) {
+      
+      let chapter = getChapter(attempt.chapterId);
+      if (!chapter) {
+        // Fallback to pinned release if not in active release
+        if (attempt.pinnedReleaseId && attempt.pinnedReleaseId !== activeReleaseId) {
+            const bundle = getReleaseBundle(attempt.pinnedReleaseId);
+            if (bundle && bundle.chapters[attempt.chapterId]) {
+                chapter = bundle.chapters[attempt.chapterId];
+            }
+        }
+        if (!chapter) {
+          results.push({
+            actionId,
+            status: 'rejected',
+            code: 'CHAPTER_NOT_FOUND',
+            message: 'Bab dari attempt tidak valid dan tidak ditemukan di rilis manapun.',
+            retryable: false,
+          });
+          continue;
+        }
+      }
+      
+      // Load canonicalStateJson from attempt (D-05)
+      if (attempt.canonicalStateJson) {
+        currentAccounts = attempt.canonicalStateJson as unknown as AccountState;
+      } else {
         currentAccounts = computeInitialAccounts(chapter);
       }
+      lastNodeId = attempt.currentNodeId ?? chapter.entrypointNodeId;
 
       const targetSceneNodeId = sceneNodeId ?? 'UNKNOWN';
       const targetChoiceId = choiceId ?? 'UNKNOWN';
+
+      // Validate strict current node sequence
+      if (lastNodeId !== targetSceneNodeId && actionType !== 'COMPLETE_MICROLEARNING') {
+          results.push({
+            actionId,
+            status: 'rejected',
+            code: 'OUT_OF_ORDER_NODE',
+            message: `Node '${targetSceneNodeId}' tidak valid; node saat ini adalah '${lastNodeId}'.`,
+            retryable: false,
+          });
+          continue;
+      }
 
       // 3. Check decision slot uniqueness on (attempt_id, scene_node_id)
       const slotOccupied = await tx
@@ -235,26 +326,29 @@ export async function processSyncBatch(
           )
         );
 
-      if (slotOccupied.length > 0) {
-        const existingChoice = slotOccupied[0].choiceId;
-        if (existingChoice === targetChoiceId) {
-          results.push({
-            actionId,
-            status: 'duplicate',
-            code: 'DECISION_ALREADY_RECORDED',
-            message: 'Keputusan untuk scene ini sudah tercatat sebelumnya.',
-            retryable: false,
-          });
-        } else {
-          // Conflict: Different choice submitted for the same scene node!
-          results.push({
-            actionId,
-            status: 'conflict',
-            code: 'SCENE_ALREADY_DECIDED',
-            message: `Konflik: scene '${targetSceneNodeId}' sudah diselesaikan dengan pilihan '${existingChoice}'.`,
-            retryable: false,
-          });
-        }
+      // For duplicate checking, we see if the exact choice exists
+      const exactMatch = slotOccupied.find(s => s.choiceId === targetChoiceId);
+      if (exactMatch) {
+        results.push({
+          actionId,
+          status: 'duplicate',
+          code: 'DECISION_ALREADY_RECORDED',
+          message: 'Keputusan untuk scene ini sudah tercatat sebelumnya.',
+          retryable: false,
+        });
+        continue;
+      }
+
+      // Check for story conflict (ignoring 'ACKNOWLEDGED' and 'START')
+      const storyDecision = slotOccupied.find(s => s.choiceId !== 'ACKNOWLEDGED' && s.choiceId !== 'START');
+      if (storyDecision && targetChoiceId !== 'ACKNOWLEDGED' && targetChoiceId !== 'START') {
+        results.push({
+          actionId,
+          status: 'conflict',
+          code: 'SCENE_ALREADY_DECIDED',
+          message: `Konflik: scene '${targetSceneNodeId}' sudah diselesaikan dengan pilihan '${storyDecision.choiceId}'.`,
+          retryable: false,
+        });
         continue;
       }
 
@@ -285,7 +379,7 @@ export async function processSyncBatch(
               .insert(rewardLedger)
               .values({
                 userId,
-                releaseId: 'pilot-v1-draft',
+                releaseId: activeReleaseId,
                 sourceNodeId: reward.sourceNodeId,
                 attemptId: attempt.id,
                 rewardType: reward.type,
@@ -297,6 +391,15 @@ export async function processSyncBatch(
 
           currentAccounts = evalRes.newAccounts;
           lastNodeId = evalRes.nextNodeId;
+
+          // Update attempt with new canonical state
+          await tx
+            .update(playthroughAttempts)
+            .set({
+              canonicalStateJson: currentAccounts as unknown as Record<string, unknown>,
+              currentNodeId: lastNodeId,
+            })
+            .where(eq(playthroughAttempts.id, attempt.id));
 
           // Check if terminal node reached
           if (evalRes.nextNodeId.includes('PASS')) {
@@ -340,13 +443,31 @@ export async function processSyncBatch(
 
       // 5. Handle COMPLETE_MICROLEARNING
       if (actionType === 'COMPLETE_MICROLEARNING') {
-        await tx.insert(gameplayActions).values({
+        // D-12: microlearning valid check
+        const scene = chapter.scenes.find(s => s.nodeId === targetSceneNodeId);
+        if (!scene || !scene.microlearning) {
+          results.push({
+            actionId,
+            status: 'rejected',
+            code: 'MICROLEARNING_NOT_FOUND',
+            message: 'Node ini tidak memiliki konten microlearning.',
+            retryable: false,
+          });
+          continue;
+        }
+
+        const existingML = await tx.select().from(microlearningActions).where(and(eq(microlearningActions.attemptId, attempt.id), eq(microlearningActions.sceneNodeId, targetSceneNodeId)));
+        if (existingML.length > 0) {
+          results.push({ actionId, status: 'duplicate', code: 'DECISION_ALREADY_RECORDED', message: 'Microlearning sudah diselesaikan sebelumnya.', retryable: false });
+          continue;
+        }
+
+        await tx.insert(microlearningActions).values({
           attemptId: attempt.id,
+          installationId,
           actionId,
           clientSequence,
           sceneNodeId: targetSceneNodeId,
-          choiceId: 'ACKNOWLEDGED',
-          actionPayload: payload,
           occurredAt: action.clientOccurredAt ? new Date(action.clientOccurredAt) : clock.now(),
         });
 
@@ -355,7 +476,7 @@ export async function processSyncBatch(
           .insert(rewardLedger)
           .values({
             userId,
-            releaseId: 'pilot-v1-draft',
+            releaseId: activeReleaseId,
             sourceNodeId: targetSceneNodeId,
             attemptId: attempt.id,
             rewardType: 'xp',
@@ -376,7 +497,7 @@ export async function processSyncBatch(
             deltaSimulatedMoney: 0,
             newAccounts: currentAccounts,
             rewardsAwarded: [{ type: 'xp', amount: 5, sourceNodeId: targetSceneNodeId }],
-            nextNodeId: targetSceneNodeId,
+            nextNodeId: lastNodeId || '',
             foxyReaction: 'FX-HAPPY',
           },
         });
@@ -429,7 +550,7 @@ export async function processSyncBatch(
             .insert(rewardLedger)
             .values({
               userId,
-              releaseId: 'pilot-v1-draft',
+              releaseId: activeReleaseId,
               sourceNodeId: miniGame.gameId,
               attemptId: attempt.id,
               rewardType: 'xp',
@@ -442,7 +563,7 @@ export async function processSyncBatch(
             .insert(rewardLedger)
             .values({
               userId,
-              releaseId: 'pilot-v1-draft',
+              releaseId: activeReleaseId,
               sourceNodeId: miniGame.gameId,
               attemptId: attempt.id,
               rewardType: 'coin',
@@ -526,7 +647,7 @@ export async function processSyncBatch(
             .insert(rewardLedger)
             .values({
               userId,
-              releaseId: 'pilot-v1-draft',
+              releaseId: activeReleaseId,
               sourceNodeId: boss.bossId,
               attemptId: attempt.id,
               rewardType: 'xp',
@@ -539,7 +660,7 @@ export async function processSyncBatch(
             .insert(rewardLedger)
             .values({
               userId,
-              releaseId: 'pilot-v1-draft',
+              releaseId: activeReleaseId,
               sourceNodeId: boss.bossId,
               attemptId: attempt.id,
               rewardType: 'coin',
@@ -552,7 +673,7 @@ export async function processSyncBatch(
             .insert(rewardLedger)
             .values({
               userId,
-              releaseId: 'pilot-v1-draft',
+              releaseId: activeReleaseId,
               sourceNodeId: boss.bossId,
               attemptId: attempt.id,
               rewardType: 'star',
@@ -609,41 +730,58 @@ export async function processSyncBatch(
       });
     }
 
-    // 8. Streak calculation
-    const streakRows = await tx
-      .select()
-      .from(playerStreaks)
-      .where(eq(playerStreaks.userId, userId));
+    // 8. Streak calculation (D-18)
+    const hasAccepted = results.some(r => r.status === 'accepted');
+    let currentStreakToReport = 0;
+    let longestStreakToReport = 0;
 
-    const currentStreakVal = streakRows[0]?.currentStreak ?? 0;
-    const longestStreakVal = streakRows[0]?.longestStreak ?? 0;
-    const lastActivityDate = streakRows[0]?.lastActivityDate ?? null;
+    if (hasAccepted) {
+      const streakRows = await tx
+        .select()
+        .from(playerStreaks)
+        .where(eq(playerStreaks.userId, userId));
 
-    const streakCalc = calculateStreak(
-      currentStreakVal,
-      longestStreakVal,
-      lastActivityDate,
-      todayWib
-    );
+      const currentStreakVal = streakRows[0]?.currentStreak ?? 0;
+      const longestStreakVal = streakRows[0]?.longestStreak ?? 0;
+      const lastActivityDate = streakRows[0]?.lastActivityDate ?? null;
 
-    await tx
-      .insert(playerStreaks)
-      .values({
-        userId,
-        currentStreak: streakCalc.currentStreak,
-        longestStreak: streakCalc.longestStreak,
-        lastActivityDate: streakCalc.lastActivityDate,
-        updatedAt: clock.now(),
-      })
-      .onConflictDoUpdate({
-        target: playerStreaks.userId,
-        set: {
+      const streakCalc = calculateStreak(
+        currentStreakVal,
+        longestStreakVal,
+        lastActivityDate,
+        todayWib
+      );
+
+      await tx
+        .insert(playerStreaks)
+        .values({
+          userId,
           currentStreak: streakCalc.currentStreak,
           longestStreak: streakCalc.longestStreak,
           lastActivityDate: streakCalc.lastActivityDate,
           updatedAt: clock.now(),
-        },
-      });
+        })
+        .onConflictDoUpdate({
+          target: playerStreaks.userId,
+          set: {
+            currentStreak: streakCalc.currentStreak,
+            longestStreak: streakCalc.longestStreak,
+            lastActivityDate: streakCalc.lastActivityDate,
+            updatedAt: clock.now(),
+          },
+        });
+      
+      currentStreakToReport = streakCalc.currentStreak;
+      longestStreakToReport = streakCalc.longestStreak;
+    } else {
+      // Just fetch existing
+      const streakRows = await tx
+        .select()
+        .from(playerStreaks)
+        .where(eq(playerStreaks.userId, userId));
+      currentStreakToReport = streakRows[0]?.currentStreak ?? 0;
+      longestStreakToReport = streakRows[0]?.longestStreak ?? 0;
+    }
 
     // 9. Rebuild projection
     const projection = await rebuildPlayerProjection(tx, userId);
@@ -656,8 +794,8 @@ export async function processSyncBatch(
       totalXp: projection.totalXp,
       totalStars: projection.totalStars,
       totalCoins: projection.totalCoins,
-      currentStreak: streakCalc.currentStreak,
-      longestStreak: streakCalc.longestStreak,
+      currentStreak: currentStreakToReport,
+      longestStreak: longestStreakToReport,
       completedChapters: projection.completedChapters,
       identity: projection.completedChapters.includes('chapter-02')
         ? 'Financial Shield Planner'
@@ -666,14 +804,18 @@ export async function processSyncBatch(
         : 'Novice',
     };
 
+    // D-07: Durable cursor using Postgres sequence
+    const cursorRes = await tx.execute(sql`SELECT nextval('action_receipt_seq') AS cursor`);
+    const nextServerCursor = String(cursorRes.rows[0].cursor);
+
     return {
       batchId,
       results,
-      nextServerCursor: String(Date.now()),
+      nextServerCursor,
       canonicalSnapshot,
       contentNotice: {
-        latestActiveReleaseId: 'pilot-v1-draft',
-        requiresUpdate: false,
+        latestActiveReleaseId: activeReleaseId,
+        requiresUpdate: false, // Could check if payload activeReleaseId differs
       },
       serverTime,
     };

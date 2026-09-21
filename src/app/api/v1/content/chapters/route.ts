@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
-import { getAllChapters } from '@/lib/game/content-loader';
+import { getAllChapters, ensureContentLoaded } from '@/lib/game/content-loader';
 import { playerProjections } from '@/db/schema/projections';
 import { formatErrorEnvelope } from '@/lib/errors';
 
@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
       completedChapters = proj[0]?.completedChapters ?? [];
     }
 
+    await ensureContentLoaded();
     const chapters = getAllChapters().map((ch) => {
       // Chapter 1 is always unlocked
       // Chapter 2 is unlocked if prerequisites are met (chapter-01 completed)

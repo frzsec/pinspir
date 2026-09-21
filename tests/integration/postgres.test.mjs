@@ -3,7 +3,18 @@ import test, { describe, before, after } from 'node:test';
 import pg from 'pg';
 
 const { Pool } = pg;
-const testDbUrl = process.env.TEST_DATABASE_URL || 'postgresql://postgres:fairuz@127.0.0.1:5432/finspire_test';
+
+// D-02b: Fail-fast if TEST_DATABASE_URL is missing or not a _test database.
+const testDbUrl = process.env.TEST_DATABASE_URL;
+if (!testDbUrl) {
+  throw new Error('[DB Guard] TEST_DATABASE_URL is required. Set it before running integration tests.');
+}
+if (!new URL(testDbUrl).pathname.replace(/^\//, '').endsWith('_test')) {
+  throw new Error(`[DB Guard] TEST_DATABASE_URL must point to a database ending with _test. Got: ${new URL(testDbUrl).pathname}`);
+}
+process.env.DATABASE_URL = testDbUrl;
+process.env.NODE_ENV = 'test';
+process.env.BETTER_AUTH_SECRET = 'test_secret_for_better_auth_123456';
 
 let pool;
 
@@ -71,7 +82,7 @@ describe('PostgreSQL Integration Tests (Real DB)', () => {
       VALUES ($1, 'pilot-v1-draft', 'node_ch1_boss', 'star', 3, 'First pass');
     `, [testUserId]);
 
-    // Second reward insert for SAME source node & reward type: MUST REJECT
+    // Second reward insert (same source, same attempt): SHOULD FAIL
     await assert.rejects(
       async () => {
         await pool.query(`
@@ -79,7 +90,7 @@ describe('PostgreSQL Integration Tests (Real DB)', () => {
           VALUES ($1, 'pilot-v1-draft', 'node_ch1_boss', 'star', 3, 'Replay attempt');
         `, [testUserId]);
       },
-      /uq_reward_ledger_source/
+      /uq_reward_ledger_source_noattempt/
     );
   });
 

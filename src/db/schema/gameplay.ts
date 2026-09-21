@@ -18,6 +18,13 @@ export const playthroughAttempts = pgTable(
     completedAt: timestamp('completed_at', { withTimezone: true }),
     scoreMastery: integer('score_mastery').notNull().default(0),
     outcomeTags: jsonb('outcome_tags').$type<string[]>().notNull().default([]),
+    // D-05: Persist canonical state across sync batches.
+    // Updated after every committed action within a transaction.
+    canonicalStateJson: jsonb('canonical_state_json').$type<Record<string, unknown>>(),
+    // Last successfully processed scene node ID (for resume/concurrency)
+    currentNodeId: text('current_node_id'),
+    // Explicit content release pin for this attempt (D-08)
+    pinnedReleaseId: text('pinned_release_id'),
   },
   (table) => [
     index('idx_attempts_user_chapter').on(table.userId, table.chapterId),
@@ -46,6 +53,24 @@ export const gameplayActions = pgTable(
   ]
 );
 
+export const microlearningActions = pgTable(
+  'microlearning_actions',
+  {
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+    attemptId: uuid('attempt_id').notNull().references(() => playthroughAttempts.id, { onDelete: 'cascade' }),
+    installationId: uuid('installation_id').references(() => clientInstallations.id, { onDelete: 'set null' }),
+    actionId: uuid('action_id').notNull().unique(),
+    clientSequence: integer('client_sequence').notNull(),
+    sceneNodeId: text('scene_node_id').notNull(),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull(),
+    syncedAt: timestamp('synced_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('uq_microlearning_attempt_node').on(table.attemptId, table.sceneNodeId),
+    index('idx_microlearning_actions_seq').on(table.installationId, table.clientSequence),
+  ]
+);
+
 export const rewardLedger = pgTable(
   'reward_ledger',
   {
@@ -53,6 +78,7 @@ export const rewardLedger = pgTable(
     userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
     releaseId: text('release_id').notNull().references(() => contentReleases.releaseId, { onDelete: 'restrict' }),
     sourceNodeId: text('source_node_id').notNull(),
+    // D-13: attemptId is now part of the unique key — rewards are scoped per attempt.
     attemptId: uuid('attempt_id').references(() => playthroughAttempts.id, { onDelete: 'set null' }),
     rewardType: text('reward_type').notNull(), // 'xp', 'star', 'achievement_badge'
     amount: integer('amount').notNull().default(0),
@@ -60,8 +86,10 @@ export const rewardLedger = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex('uq_reward_ledger_source').on(table.userId, table.releaseId, table.sourceNodeId, table.rewardType),
+    // D-13 fix: unique constraint now includes attemptId to prevent duplicate rewards across attempts
+    // See migration 0001 for DB-level index (uq_reward_ledger_source_v2 and _noattempt)
     index('idx_reward_ledger_user').on(table.userId),
+    index('idx_reward_ledger_attempt').on(table.attemptId),
     check('chk_reward_amount_non_negative', sql`${table.amount} >= 0`),
   ]
 );

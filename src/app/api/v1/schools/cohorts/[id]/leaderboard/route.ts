@@ -47,10 +47,10 @@ export async function GET(
     }
 
     // 3. Query pseudonymous leaderboard data
-    const rows = await db
+      const rows = await db
       .select({
         userId: users.id,
-        playerCode: users.playerCode,
+        displayAlias: users.displayAlias,
         nickname: users.nickname,
         totalXp: sql<number>`coalesce(${playerProjections.totalXp}, 0)`,
         totalStars: sql<number>`coalesce(${playerProjections.totalStars}, 0)`,
@@ -70,7 +70,7 @@ export async function GET(
 
     const leaderboard = rows.map((r, index) => ({
       rank: index + 1,
-      playerCode: r.playerCode,
+      displayAlias: r.displayAlias,
       nickname: r.nickname,
       totalXp: Number(r.totalXp),
       totalStars: Number(r.totalStars),

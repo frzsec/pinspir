@@ -9,12 +9,12 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "content:validate": "node scripts/validate-content.mjs",
-    "test:content": "node scripts/test-validator-regressions.mjs",
+    "test:content": "node --env-file=.env scripts/test-validator-regressions.mjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed-pilot-content.mjs",
-    "test:unit": "tsx --conditions=react-server --test tests/unit/foundation.test.mjs",
-    "test:integration": "tsx --conditions=react-server --test tests/integration/postgres.test.mjs tests/integration/auth.test.mjs tests/integration/gameplay-sync.test.mjs tests/integration/headless-journey.test.mjs",
+    "test:unit": "tsx --env-file=.env --conditions=react-server --test tests/unit/foundation.test.mjs tests/unit/narrative-engine.test.mjs",
+    "test:integration": "tsx --env-file=.env --conditions=react-server --test --test-concurrency=1 tests/integration/postgres.test.mjs tests/integration/auth.test.mjs tests/integration/gameplay-sync.test.mjs tests/integration/headless-journey.test.mjs tests/integration/content-loader.test.mjs",
     "test": "npm run test:content && npm run test:unit && npm run test:integration"
 
   },

@@ -75,30 +75,52 @@ export function evaluateChoiceTransition(
 
   // Process stateOperations if defined
   if (choice.stateOperations) {
-    if (choice.stateOperations.allocation) {
-      const { source, target, amount } = choice.stateOperations.allocation;
-      const allocAmount = amount ?? 0;
-      if (source === 'availableCash' && target === 'goalSavings') {
-        if (newAccounts.availableCash < allocAmount) {
-          throw new DomainValidationError('INSUFFICIENT_CASH', 'Saldo kas tidak cukup untuk dialokasikan.');
+    if (choice.stateOperations.transfers) {
+      for (const t of choice.stateOperations.transfers) {
+        if (!t.source || !t.target || !t.amount) continue;
+        const amount = t.amount;
+        
+        // Ensure source has enough funds (only applicable if source is a numeric value and not debt)
+        const sourceVal = newAccounts[t.source];
+        if (typeof sourceVal === 'number' && t.source !== 'debt' && sourceVal < amount) {
+          throw new DomainValidationError('INSUFFICIENT_FUNDS', `Saldo ${t.source} tidak cukup untuk dialokasikan.`);
         }
-        newAccounts.availableCash -= allocAmount;
-        newAccounts.goalSavings += allocAmount;
-      } else if (source === 'availableCash' && target === 'emergencyFund') {
-        if (newAccounts.availableCash < allocAmount) {
-          throw new DomainValidationError('INSUFFICIENT_CASH', 'Saldo kas tidak cukup untuk dialokasikan.');
+
+        // Apply transfer
+        if (typeof newAccounts[t.source] === 'number') {
+          (newAccounts as unknown as Record<string, number>)[t.source] -= amount;
         }
-        newAccounts.availableCash -= allocAmount;
-        newAccounts.emergencyFund += allocAmount;
+        if (typeof newAccounts[t.target] === 'number') {
+          (newAccounts as unknown as Record<string, number>)[t.target] += amount;
+        }
       }
+    }
+
+    if (choice.stateOperations.outflow !== undefined) {
+      delta = -choice.stateOperations.outflow;
+      newAccounts.availableCash += delta;
     } else if (choice.stateOperations.expense !== undefined) {
       delta = -choice.stateOperations.expense;
       newAccounts.availableCash += delta;
-    } else if (choice.stateOperations.income !== undefined) {
-      delta = choice.stateOperations.income;
+    } else if (choice.stateOperations.inflow !== undefined) {
+      delta = choice.stateOperations.inflow;
       newAccounts.availableCash += delta;
     }
+
+    if (choice.stateOperations.debtIncurred !== undefined) {
+      newAccounts.debt += choice.stateOperations.debtIncurred;
+      newAccounts.availableCash += choice.stateOperations.debtIncurred;
+    }
+    
+    if (choice.stateOperations.debtRepaid !== undefined) {
+      if (newAccounts.availableCash < choice.stateOperations.debtRepaid) {
+        throw new DomainValidationError('INSUFFICIENT_FUNDS', 'Saldo kas tidak cukup untuk membayar utang.');
+      }
+      newAccounts.availableCash -= choice.stateOperations.debtRepaid;
+      newAccounts.debt = Math.max(0, newAccounts.debt - choice.stateOperations.debtRepaid);
+    }
   } else {
+    // Fallback to legacy delta mapping if stateOperations not defined
     newAccounts.availableCash += delta;
   }
 
@@ -240,25 +262,52 @@ export function evaluateBossChallenge(
     let dimPassed = false;
 
     if (
+      rubric.evalMode === 'BALANCE_INTEGRITY' ||
       rubric.dimension.includes('Integritas Saldo') ||
       rubric.dimension.includes('Konservasi Nilai')
     ) {
       // Non-negative balance and no uncontrolled debt
       dimPassed = accounts.availableCash >= 0 && accounts.debt === 0;
     } else if (
+      rubric.evalMode === 'ARTIFACT_PRESENCE' ||
       rubric.dimension.includes('Kelengkapan Struktur') ||
       rubric.dimension.includes('Cetak Biru')
     ) {
-      // Must have artifact data provided and non-empty
       const artifact = rawSubmission.artifactData;
-      dimPassed = Boolean(artifact && typeof artifact === 'object' && Object.keys(artifact).length >= 3);
-    } else if (rubric.dimension.includes('Penerapan') || rubric.dimension.includes('Transfer')) {
-      // Check transfer question submission
-      const optionId = rawSubmission.transferOptionId;
-      // If provided, check if valid option ID
-      dimPassed = Boolean(optionId && !optionId.includes('fail') && !optionId.includes('opt3'));
+      if (artifact && typeof artifact === 'object') {
+        // Collect all required fields from the boss mastery artifact structure
+        const requiredFields = rubric.evalParams?.requiredFields ?? boss.masteryArtifact.sections.flatMap(sec => 
+          sec.fields.map(f => (f as Record<string, unknown>).fieldId as string)
+        );
+        // Check that every required field is present in the submission
+        dimPassed = requiredFields.every(fieldId => artifact[fieldId] !== undefined && artifact[fieldId] !== null);
+      } else {
+        dimPassed = false;
+      }
+    } else if (rubric.evalMode === 'ARTIFACT_VALUE_MATCH') {
+       const artifact = rawSubmission.artifactData;
+       if (artifact && typeof artifact === 'object' && rubric.evalParams?.expectedValues) {
+           dimPassed = Object.entries(rubric.evalParams.expectedValues).every(([k, v]) => artifact[k] === v);
+       } else {
+           dimPassed = false;
+       }
+    } else if (
+      rubric.evalMode === 'TRANSFER_SCENARIO' || 
+      rubric.dimension.includes('Penerapan') || 
+      rubric.dimension.includes('Transfer')
+    ) {
+      // Deterministic transfer scenario check
+      const expectedId = rubric.evalParams?.transferOptionId;
+      const submittedId = rawSubmission.transferOptionId;
+      if (expectedId !== undefined) {
+        dimPassed = (submittedId === expectedId);
+      } else {
+        // Fail closed if content hasn't been updated to provide expected transfer ID
+        dimPassed = false;
+      }
     } else {
-      dimPassed = true;
+      // FAIL-CLOSED for unknown rubric or missing explicit condition
+      dimPassed = false;
     }
 
     const score = dimPassed ? rubric.weight : 0;

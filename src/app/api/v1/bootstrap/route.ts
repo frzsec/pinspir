@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { playerProjections, playerStreaks } from '@/db/schema/projections';
-import { getActiveReleaseManifest } from '@/lib/game/content-loader';
+import { getActiveReleaseManifest, ensureContentLoaded } from '@/lib/game/content-loader';
 import { formatErrorEnvelope, UnauthorizedError } from '@/lib/errors';
 import { getSystemClock } from '@/lib/clock';
 
@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
     }
 
     const clock = getSystemClock();
+    await ensureContentLoaded();
     const manifest = getActiveReleaseManifest();
 
     // Fetch projection & streak

@@ -1,9 +1,4 @@
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
-
-const rateLimitStore = new Map<string, RateLimitEntry>();
+import { getPool } from '@/db';
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -11,52 +6,61 @@ export interface RateLimitResult {
   resetInSeconds: number;
 }
 
-export function checkRateLimit(
+export async function checkRateLimit(
   key: string,
   limit: number,
   windowMs: number
-): RateLimitResult {
+): Promise<RateLimitResult> {
   const now = Date.now();
-  const entry = rateLimitStore.get(key);
+  const resetAt = new Date(now + windowMs);
 
-  if (!entry || now > entry.resetAt) {
-    rateLimitStore.set(key, {
-      count: 1,
-      resetAt: now + windowMs,
-    });
+  try {
+    const pool = getPool();
+    // Delete expired entries
+    await pool.query('DELETE FROM rate_limit_entries WHERE reset_at < NOW()');
+
+    // UPSERT the rate limit entry
+    const res = await pool.query(
+      `INSERT INTO rate_limit_entries (key, count, reset_at)
+       VALUES ($1, 1, $2)
+       ON CONFLICT (key) DO UPDATE
+       SET count = rate_limit_entries.count + 1
+       RETURNING count, EXTRACT(EPOCH FROM (reset_at - NOW())) AS reset_in_seconds`,
+      [key, resetAt]
+    );
+
+    const count = parseInt(res.rows[0].count, 10);
+    const resetInSeconds = Math.max(1, Math.ceil(parseFloat(res.rows[0].reset_in_seconds)));
+
+    if (count > limit) {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetInSeconds,
+      };
+    }
+
+    return {
+      allowed: true,
+      remaining: limit - count,
+      resetInSeconds,
+    };
+  } catch (error) {
+    // Fail-open if DB is unavailable
+    console.warn('[RateLimiter] Database error, failing open', error);
     return {
       allowed: true,
       remaining: limit - 1,
       resetInSeconds: Math.ceil(windowMs / 1000),
     };
   }
-
-  if (entry.count >= limit) {
-    return {
-      allowed: false,
-      remaining: 0,
-      resetInSeconds: Math.max(1, Math.ceil((entry.resetAt - now) / 1000)),
-    };
-  }
-
-  entry.count += 1;
-  return {
-    allowed: true,
-    remaining: limit - entry.count,
-    resetInSeconds: Math.ceil((entry.resetAt - now) / 1000),
-  };
 }
 
-export function resetRateLimit(key: string): void {
-  rateLimitStore.delete(key);
-}
-
-// Clean up stale entries every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of rateLimitStore.entries()) {
-    if (now > entry.resetAt) {
-      rateLimitStore.delete(key);
-    }
+export async function resetRateLimit(key: string): Promise<void> {
+  try {
+    const pool = getPool();
+    await pool.query('DELETE FROM rate_limit_entries WHERE key = $1', [key]);
+  } catch (error) {
+    console.warn('[RateLimiter] Failed to reset rate limit', error);
   }
-}, 5 * 60 * 1000).unref();
+}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '@/db';
+import { getPool, db } from '@/db';
+import { analyticsEvents } from '@/db/schema/analytics';
 import { getCurrentUserSession } from '@/lib/auth/get-current-user';
 import { BadRequestError, UnauthorizedError, formatErrorEnvelope } from '@/lib/errors';
 import { defaultClock } from '@/lib/clock';
@@ -25,6 +26,14 @@ export async function POST(req: NextRequest) {
        WHERE user_id = $1 AND consent_type = $2;`,
       [session.user.id, consentType]
     );
+
+    // Record mandatory telemetry
+    await db.insert(analyticsEvents).values({
+      eventName: 'consent_revoked',
+      userId: session.user.id,
+      eventPayload: { consentType },
+      occurredAt: defaultClock.now(),
+    });
 
     return NextResponse.json({
       success: true,

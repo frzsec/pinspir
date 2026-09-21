@@ -18,18 +18,3 @@ export const userConsents = pgTable(
   ]
 );
 
-export const credentialResetAudits = pgTable(
-  'credential_reset_audits',
-  {
-    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-    targetUserId: uuid('target_user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-    teacherId: uuid('teacher_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
-    cohortId: uuid('cohort_id').notNull().references(() => cohorts.id, { onDelete: 'cascade' }),
-    reason: text('reason').notNull().default('Reset sandi murid terbimbing di kelas'),
-    resetAt: timestamp('reset_at', { withTimezone: true }).notNull().defaultNow(),
-  },
-  (table) => [
-    index('idx_reset_audits_target').on(table.targetUserId),
-    index('idx_reset_audits_teacher').on(table.teacherId),
-  ]
-);

@@ -14,7 +14,8 @@ export async function GET(req: NextRequest) {
       {
         success: true,
         user: session.user,
-        sessionToken: session.sessionToken,
+        // D-20: sessionToken intentionally omitted from JSON.
+        // The session token travels only in the HttpOnly cookie.
         expiresAt: session.expiresAt.toISOString(),
         serverTime: defaultClock.nowIso(),
       },
