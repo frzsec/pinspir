@@ -7,23 +7,37 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "content:validate": "node scripts/validate-content.mjs",
-    "test:content": "node scripts/test-validator-regressions.mjs"
+    "test:content": "node scripts/test-validator-regressions.mjs",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:seed": "node scripts/seed-pilot-content.mjs",
+    "test:unit": "tsx --conditions=react-server --test tests/unit/foundation.test.mjs",
+    "test:integration": "tsx --conditions=react-server --test tests/integration/postgres.test.mjs tests/integration/auth.test.mjs tests/integration/gameplay-sync.test.mjs tests/integration/headless-journey.test.mjs",
+    "test": "npm run test:content && npm run test:unit && npm run test:integration"
+
   },
   "dependencies": {
+    "better-auth": "^1.7.5",
     "canvas-confetti": "^1.9.4",
+    "drizzle-orm": "^0.45.2",
     "motion": "^13.3.0",
     "next": "16.3.5",
+    "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "server-only": "^0.0.1",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
