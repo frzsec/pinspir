@@ -90,3 +90,28 @@ body {
   }
 }
 
+/* Hide scrollbar for elements with no-scrollbar class */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom scrollbar for dark sections to blend with background */
+.progress-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+.progress-scrollbar::-webkit-scrollbar-track {
+  background: #1E293B;
+  border-radius: 4px;
+}
+.progress-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+.progress-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+

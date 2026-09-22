@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { BookOpen, Clock, Sparkles, Coins, Gamepad2, Wallet, Users } from "lucide-react";
 
 export default function HomeDashboard() {
@@ -376,7 +377,8 @@ export default function HomeDashboard() {
           </button>
 
           {/* 4. Stats / Leaderboard */}
-          <button
+          <Link
+            href="/progress"
             aria-label="Peringkat"
             className="flex items-center justify-center w-11 h-11 cursor-pointer transition-transform active:scale-95 text-[#3C4A42] hover:opacity-80"
           >
@@ -386,7 +388,7 @@ export default function HomeDashboard() {
                 fill="#3C4A42"
               />
             </svg>
-          </button>
+          </Link>
 
           {/* 5. Profile */}
           <button
