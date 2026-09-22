@@ -14,6 +14,7 @@ import {
   Gamepad2,
   Trophy,
   User,
+  ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -28,7 +29,7 @@ export default function ProgressPage() {
       <div className="relative w-full max-w-[420px] h-[100dvh] sm:h-[880px] sm:max-h-[95vh] bg-[#F2F9F6] flex flex-col justify-between overflow-hidden shadow-2xl sm:rounded-3xl">
         
         {/* ProgressHeader */}
-        <header className="pt-14 px-5 pb-4 flex justify-between items-start bg-[#F2F9F6] z-20 sticky top-0 shrink-0">
+        <header className="pt-4 sm:pt-5 px-5 pb-3 flex justify-between items-start bg-[#F2F9F6] z-20 sticky top-0 shrink-0">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-[#1E293B]">Progress Chapter</h1>
             <p className="text-sm text-[#64748B] mt-1">Pantau perkembangan belajar keuanganmu</p>
@@ -186,10 +187,12 @@ export default function ProgressPage() {
             </svg>
           </Link>
 
-          {/* 2. Book / Cerita */}
-          <button
-            aria-label="Cerita"
+          {/* 2. Book / Cerita (Kembali ke Chapter Map) */}
+          <Link
+            href="/chapter"
+            aria-label="Cerita & Chapter Map"
             className="flex items-center justify-center w-11 h-11 cursor-pointer transition-transform active:scale-95 text-[#3C4A42] hover:opacity-80"
+            title="Kembali ke Chapter Map"
           >
             <svg width="24" height="22" viewBox="0 0 22 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path
@@ -197,10 +200,11 @@ export default function ProgressPage() {
                 fill="currentColor"
               />
             </svg>
-          </button>
+          </Link>
 
           {/* 3. Gamepad */}
-          <button
+          <Link
+            href="/game"
             aria-label="Mini-game"
             className="flex items-center justify-center w-11 h-11 cursor-pointer transition-transform active:scale-95 text-[#3C4A42] hover:opacity-80"
           >
@@ -210,7 +214,7 @@ export default function ProgressPage() {
                 fill="currentColor"
               />
             </svg>
-          </button>
+          </Link>
 
           {/* 4. Stats / Leaderboard (Active: Green rounded pill) */}
           <button
@@ -226,7 +230,8 @@ export default function ProgressPage() {
           </button>
 
           {/* 5. Profile */}
-          <button
+          <Link
+            href="/profile"
             aria-label="Profil"
             className="flex items-center justify-center w-11 h-11 cursor-pointer transition-transform active:scale-95 text-[#3C4A42] hover:opacity-80"
           >
@@ -236,7 +241,7 @@ export default function ProgressPage() {
                 fill="currentColor"
               />
             </svg>
-          </button>
+          </Link>
         </nav>
       </div>
     </div>

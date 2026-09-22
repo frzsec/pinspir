@@ -351,7 +351,8 @@ export default function HomeDashboard() {
           </button>
 
           {/* 2. Book / Cerita */}
-          <button
+          <Link
+            href="/chapter"
             aria-label="Cerita"
             className="flex items-center justify-center w-11 h-11 cursor-pointer transition-transform active:scale-95 text-[#3C4A42] hover:opacity-80"
           >
@@ -361,10 +362,11 @@ export default function HomeDashboard() {
                 fill="#3C4A42"
               />
             </svg>
-          </button>
+          </Link>
 
           {/* 3. Gamepad */}
-          <button
+          <Link
+            href="/game"
             aria-label="Mini-game"
             className="flex items-center justify-center w-11 h-11 cursor-pointer transition-transform active:scale-95 text-[#3C4A42] hover:opacity-80"
           >
@@ -374,7 +376,7 @@ export default function HomeDashboard() {
                 fill="#3C4A42"
               />
             </svg>
-          </button>
+          </Link>
 
           {/* 4. Stats / Leaderboard */}
           <Link
@@ -391,7 +393,8 @@ export default function HomeDashboard() {
           </Link>
 
           {/* 5. Profile */}
-          <button
+          <Link
+            href="/profile"
             aria-label="Profil"
             className="flex items-center justify-center w-11 h-11 cursor-pointer transition-transform active:scale-95 text-[#3C4A42] hover:opacity-80"
           >
@@ -401,7 +404,7 @@ export default function HomeDashboard() {
                 fill="#3C4A42"
               />
             </svg>
-          </button>
+          </Link>
         </nav>
 
       </div>
