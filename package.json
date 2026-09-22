@@ -16,12 +16,12 @@
     "test:unit": "tsx --env-file=.env --conditions=react-server --test tests/unit/foundation.test.mjs tests/unit/narrative-engine.test.mjs",
     "test:integration": "tsx --env-file=.env --conditions=react-server --test --test-concurrency=1 tests/integration/postgres.test.mjs tests/integration/auth.test.mjs tests/integration/gameplay-sync.test.mjs tests/integration/headless-journey.test.mjs tests/integration/content-loader.test.mjs",
     "test": "npm run test:content && npm run test:unit && npm run test:integration"
-
   },
   "dependencies": {
     "better-auth": "^1.7.5",
     "canvas-confetti": "^1.9.4",
     "drizzle-orm": "^0.45.2",
+    "lucide-react": "^1.47.0",
     "motion": "^13.3.0",
     "next": "16.3.5",
     "pg": "^8.23.0",

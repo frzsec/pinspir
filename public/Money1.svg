@@ -1,0 +1,5 @@
+<svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="12.5" cy="12.5" r="11" fill="#FEA619" stroke="#E69106" stroke-width="1.5"/>
+  <circle cx="12.5" cy="12.5" r="8" stroke="#FFD875" stroke-width="1" stroke-dasharray="2 2"/>
+  <text x="12.5" y="16" text-anchor="middle" fill="#684000" font-family="system-ui, sans-serif" font-weight="900" font-size="10">Rp</text>
+</svg>

@@ -12,6 +12,8 @@
   --font-mono: var(--font-geist-mono);
   --font-nunitoSans: var(--font-nunito-sans);
   --font-nunito-sans: var(--font-nunito-sans);
+  --font-plusJakartaSans: var(--font-plus-jakarta-sans);
+  --font-plus-jakarta-sans: var(--font-plus-jakarta-sans);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -26,3 +28,65 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Animated Battery Component (Taken from uiverse battery switch without outer layer) */
+.battery-switch {
+  font-size: 10px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  user-select: none;
+}
+
+.battery-switch .battery {
+  height: 1.4em;
+  width: 2.9em;
+  border: 1.8px solid #121E18;
+  border-radius: 5px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 1.5px;
+  box-sizing: border-box;
+  background: rgba(18, 30, 24, 0.12);
+  transition: 0.3s;
+}
+
+.battery-switch .battery:before {
+  content: "";
+  position: absolute;
+  height: 0.55em;
+  width: 0.22em;
+  right: -0.32em;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 0% 100% 100% 0% / 0% 50% 50% 0%;
+  background: #121E18;
+  transition: 0.3s;
+}
+
+.battery-switch .battery-bar {
+  content: "";
+  position: relative;
+  height: 0.8em;
+  border-radius: 3px;
+  transition: background-color 0.4s ease;
+  animation: lowbattery 1.6s linear infinite;
+}
+
+@keyframes lowbattery {
+  0% {
+    width: 1.1em;
+  }
+  40% {
+    width: 2.3em;
+  }
+  70% {
+    width: 2.3em;
+  }
+  100% {
+    width: 1.1em;
+  }
+}
+

@@ -10,19 +10,20 @@ const slides = [
     id: 1,
     title: "Dari 10 Ribu Jadi Cerdas",
     desc: "Bantu Foxy kelola uang lewat cerita seru,\ndan hal unik di dunia keuangan.",
-    image: "/Gemini_generated_image_yto8snyto8snyto8removebg1.png",
+    image: "/assets/onboarding/ob1.png",
   },
   {
     id: 2,
     title: "Pilihanmu, Masa Depanmu",
     desc: "Ambil keputusan belanja bijak, hindari jebakan utang,\ndan bangun payung dana darurat bersama Foxy.",
-    image: "/Gemini_generated_image_yto8snyto8snyto8removebg1.png",
+    image: "/assets/onboarding/ob2.png",
   },
   {
     id: 3,
     title: "100% Aman & Tanpa Nama",
     desc: "Privasi terjaga penuh tanpa email atau nomor HP.\nSatu klik untuk mulai petualangan finansialmu!",
-    image: "/Gemini_generated_image_yto8snyto8snyto8removebg1.png",
+    image: "/assets/onboarding/ob3.png",
+    scale: 1.3,
   },
 ];
 
@@ -124,6 +125,7 @@ export default function OnboardingCarousel() {
                   width={280}
                   height={280}
                   priority
+                  style={{ transform: `scale(${slides[page].scale ?? 1})`, transition: "transform 0.3s ease" }}
                   className="w-auto h-full max-h-56 sm:max-h-64 object-contain pointer-events-none drop-shadow-sm"
                 />
               </motion.div>

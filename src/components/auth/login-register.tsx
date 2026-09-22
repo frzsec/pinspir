@@ -75,7 +75,7 @@ export default function LoginRegister({
         return;
       }
 
-      router.push("/");
+      router.push("/dashboard");
       router.refresh();
     } catch {
       setLoginError("Gagal terhubung ke server. Periksa koneksi Anda.");
@@ -196,10 +196,10 @@ export default function LoginRegister({
           passphrase: autoPassphrase,
         });
       } else {
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch {
-      router.push("/");
+      router.push("/dashboard");
     }
   };
 
@@ -212,7 +212,7 @@ export default function LoginRegister({
   };
 
   const handleFinishRegister = () => {
-    router.push("/");
+    router.push("/dashboard");
     router.refresh();
   };
 
@@ -225,16 +225,35 @@ export default function LoginRegister({
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#EBF8EF] flex items-center justify-center overflow-x-hidden font-nunitoSans selection:bg-emerald-200">
+    <div className="relative min-h-screen w-full bg-[#EBF8EF] flex items-center justify-center overflow-x-hidden font-nunitoSans selection:bg-emerald-200">
+      {/* Wallpaper Background - Desktop (full screen) */}
+      <Image
+        src="/assets/formlogin/wallpc.png"
+        alt=""
+        fill
+        priority
+        className="object-cover object-center pointer-events-none select-none"
+        aria-hidden="true"
+      />
       {/* Centered card container - widened horizontally, no overflow-hidden so shadow is not cropped */}
-      <div className="relative w-full max-w-[460px] sm:max-w-[480px] min-h-[100dvh] flex flex-col justify-between bg-[#EBF8EF]">
-        
+      <div className="relative w-full max-w-[460px] sm:max-w-[480px] min-h-[100dvh] flex flex-col justify-between overflow-hidden">
+
+        {/* Top Bar / Lewati Button */}
+        <div className="relative w-full flex justify-end items-center px-6 pt-5 pb-0 z-20 shrink-0">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="cursor-pointer text-[#006C49] font-nunitoSans text-sm sm:text-base font-bold py-1.5 px-3.5 rounded-full hover:bg-emerald-50/80 transition-colors"
+          >
+            Lewati
+          </button>
+        </div>
+
         {/* Top & Hero Section */}
         <div className="relative z-10 w-full flex-1 flex flex-col items-center justify-center px-6 pt-10 pb-6 text-center select-none">
           {/* Mascot Illustration */}
-          <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center mb-2">
+          <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center mb-2" style={{ transform: "scale(2)", transformOrigin: "center" }}>
             <Image
-              src="/Gemini_generated_image_yto8snyto8snyto8removebg1.png"
+              src="/assets/formlogin/logofinspire.png"
               alt="Finspire Mascot Foxy"
               width={180}
               height={180}
