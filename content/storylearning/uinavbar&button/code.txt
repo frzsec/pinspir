@@ -1,0 +1,435 @@
+// types/quiz.ts
+export interface QuizOption {
+  id: string;
+  imageUrl: string;
+  label?: string;
+}
+
+export interface QuizState {
+  currentQuestion: number;
+  totalQuestions: number;
+  selectedOption: string | null;
+  questions: Array<{
+    id: string;
+    text: string;
+    audioUrl?: string;
+    options: QuizOption[];
+  }>;
+}
+
+// styles/colors.ts
+export const colors = {
+  purple: {
+    light: '#F2E8FB',
+    medium: '#C1B2DB',
+    accent: '#A28FC8',
+    dark: '#B29CDA',
+    darkest: '#685F74',
+  },
+  gray: {
+    light: '#EAE2F8',
+    medium: '#A0A0A0',
+    dark: '#4A4A4A',
+  },
+  neutral: {
+    white: '#FFFFFF',
+    text: '#1F2937',
+  },
+};
+
+// components/ProgressBar.tsx
+import React from 'react';
+import { colors } from '../styles/colors';
+
+interface ProgressBarProps {
+  current: number;
+  total: number;
+  onBack?: () => void;
+}
+
+export const ProgressBar: React.FC<ProgressBarProps> = ({
+  current,
+  total,
+  onBack,
+}) => {
+  const progress = (current / total) * 100;
+
+  return (
+    <header className="shrink-0 pt-14 px-6 pb-4 flex items-center gap-4 bg-white">
+      <button
+        onClick={onBack}
+        className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors"
+        aria-label="Go back"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div
+        className="flex-1 h-3 rounded-full overflow-hidden"
+        style={{ backgroundColor: colors.gray.light }}
+      >
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{
+            width: `${progress}%`,
+            backgroundColor: colors.purple.dark,
+          }}
+        />
+      </div>
+
+      <span className="text-xs font-semibold text-gray-500">
+        {current}/{total}
+      </span>
+    </header>
+  );
+};
+
+// components/QuestionPrompt.tsx
+import React from 'react';
+import { colors } from '../styles/colors';
+
+interface QuestionPromptProps {
+  questionText: string;
+  audioUrl?: string;
+  onAudioPlay?: () => void;
+}
+
+export const QuestionPrompt: React.FC<QuestionPromptProps> = ({
+  questionText,
+  audioUrl,
+  onAudioPlay,
+}) => {
+  const handleAudioClick = () => {
+    if (audioUrl && onAudioPlay) {
+      onAudioPlay();
+      const audio = new Audio(audioUrl);
+      audio.play();
+    }
+  };
+
+  return (
+    <div className="text-center mb-8">
+      <h1 className="text-[22px] font-bold text-gray-900 mb-4 tracking-tight">
+        {questionText}
+      </h1>
+
+      {audioUrl && (
+        <button
+          onClick={handleAudioClick}
+          className="inline-flex items-center gap-2 group"
+          aria-label="Play audio pronunciation"
+        >
+          <svg
+            className="w-5 h-5 text-gray-800 group-active:scale-90 transition-transform"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" />
+          </svg>
+          <span
+            className="text-xl font-semibold border-b-2 border-dotted pb-0.5"
+            style={{
+              color: colors.purple.accent,
+              borderColor: `${colors.purple.accent}66`,
+            }}
+          >
+            Apple
+          </span>
+        </button>
+      )}
+    </div>
+  );
+};
+
+// components/OptionCard.tsx
+import React from 'react';
+import { colors } from '../styles/colors';
+
+interface OptionCardProps {
+  id: string;
+  imageUrl: string;
+  isSelected?: boolean;
+  isCorrect?: boolean;
+  isIncorrect?: boolean;
+  onClick?: () => void;
+}
+
+export const OptionCard: React.FC<OptionCardProps> = ({
+  id,
+  imageUrl,
+  isSelected = false,
+  isCorrect = false,
+  isIncorrect = false,
+  onClick,
+}) => {
+  let borderColor = 'transparent';
+  let borderWidth = '2px';
+
+  if (isCorrect) {
+    borderColor = '#10B981'; // Green
+  } else if (isIncorrect) {
+    borderColor = '#EF4444'; // Red
+  } else if (isSelected) {
+    borderColor = colors.purple.dark;
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className="card-hover aspect-[4/5] rounded-2xl flex flex-col items-center justify-center p-4 outline-none transition-all duration-200 active:scale-98 group"
+      style={{
+        backgroundColor: colors.purple.light,
+        borderColor,
+        borderWidth,
+      }}
+      aria-pressed={isSelected}
+    >
+      <img
+        src={imageUrl}
+        alt={`Option ${id}`}
+        className="w-full h-full object-cover rounded-lg"
+        onError={(e) => {
+          // Fallback to icon if image fails to load
+          const parent = (e.target as HTMLElement).parentElement;
+          if (parent) {
+            parent.innerHTML = `
+              <svg class="w-16 h-16 text-purple-400 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            `;
+          }
+        }}
+      />
+    </button>
+  );
+};
+
+// components/OptionsGrid.tsx
+import React from 'react';
+import { OptionCard } from './OptionCard';
+import { QuizOption } from '../types/quiz';
+
+interface OptionsGridProps {
+  options: QuizOption[];
+  selectedOptionId?: string | null;
+  onSelect?: (optionId: string) => void;
+  correctOptionId?: string;
+  showResults?: boolean;
+}
+
+export const OptionsGrid: React.FC<OptionsGridProps> = ({
+  options,
+  selectedOptionId,
+  onSelect,
+  correctOptionId,
+  showResults = false,
+}) => {
+  return (
+    <div className="grid grid-cols-2 gap-4 w-full max-w-[320px] mx-auto">
+      {options.map((option) => (
+        <OptionCard
+          key={option.id}
+          id={option.id}
+          imageUrl={option.imageUrl}
+          isSelected={selectedOptionId === option.id}
+          isCorrect={showResults && correctOptionId === option.id}
+          isIncorrect={
+            showResults &&
+            selectedOptionId === option.id &&
+            correctOptionId !== option.id
+          }
+          onClick={() => onSelect?.(option.id)}
+        />
+      ))}
+    </div>
+  );
+};
+
+// components/ActionButton.tsx
+import React from 'react';
+import { colors } from '../styles/colors';
+
+interface ActionButtonProps {
+  label: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  isLoading?: boolean;
+}
+
+export const ActionButton: React.FC<ActionButtonProps> = ({
+  label,
+  onClick,
+  disabled = false,
+  isLoading = false,
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="w-full font-bold py-[18px] rounded-full text-[17px] transition-all shadow-sm active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
+      style={{
+        backgroundColor: disabled ? '#9CA3AF' : colors.purple.darkest,
+        color: colors.neutral.white,
+      }}
+    >
+      {isLoading ? (
+        <span className="flex items-center justify-center gap-2">
+          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+          Loading...
+        </span>
+      ) : (
+        label
+      )}
+    </button>
+  );
+};
+
+// components/QuizScreen.tsx
+import React, { useState } from 'react';
+import { ProgressBar } from './ProgressBar';
+import { QuestionPrompt } from './QuestionPrompt';
+import { OptionsGrid } from './OptionsGrid';
+import { ActionButton } from './ActionButton';
+import { QuizState } from '../types/quiz';
+
+interface QuizScreenProps {
+  quizState: QuizState;
+  onSelectOption: (optionId: string) => void;
+  onNext: () => void;
+  onBack?: () => void;
+}
+
+export const QuizScreen: React.FC<QuizScreenProps> = ({
+  quizState,
+  onSelectOption,
+  onNext,
+  onBack,
+}) => {
+  const currentQuestion = quizState.questions[quizState.currentQuestion];
+  const isAnswered = quizState.selectedOption !== null;
+
+  return (
+    <div className="w-full h-screen flex flex-col bg-white">
+      {/* Header with Progress */}
+      <ProgressBar
+        current={quizState.currentQuestion + 1}
+        total={quizState.totalQuestions}
+        onBack={onBack}
+      />
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-y-auto px-6 py-4 flex flex-col items-center justify-center">
+        {/* Question */}
+        <QuestionPrompt
+          questionText={currentQuestion.text}
+          audioUrl={currentQuestion.audioUrl}
+        />
+
+        {/* Options Grid */}
+        <OptionsGrid
+          options={currentQuestion.options}
+          selectedOptionId={quizState.selectedOption}
+          onSelect={onSelectOption}
+        />
+      </main>
+
+      {/* Footer with Next Button */}
+      <footer className="shrink-0 px-6 pb-[34px] pt-4">
+        <ActionButton
+          label={
+            quizState.currentQuestion === quizState.totalQuestions - 1
+              ? 'Complete'
+              : 'Next'
+          }
+          onClick={onNext}
+          disabled={!isAnswered}
+        />
+      </footer>
+    </div>
+  );
+};
+
+// App.tsx (Example usage)
+import React, { useState } from 'react';
+import { QuizScreen } from './components/QuizScreen';
+import { QuizState } from './types/quiz';
+
+const App: React.FC = () => {
+  const [quizState, setQuizState] = useState<QuizState>({
+    currentQuestion: 0,
+    totalQuestions: 4,
+    selectedOption: null,
+    questions: [
+      {
+        id: '1',
+        text: 'Choose the correct answer',
+        audioUrl: '/audio/apple.mp3',
+        options: [
+          { id: 'opt1', imageUrl: '/images/apple.jpg' },
+          { id: 'opt2', imageUrl: '/images/orange.jpg' },
+          { id: 'opt3', imageUrl: '/images/banana.jpg' },
+          { id: 'opt4', imageUrl: '/images/grape.jpg' },
+        ],
+      },
+      // Add more questions...
+    ],
+  });
+
+  const handleSelectOption = (optionId: string) => {
+    setQuizState((prev) => ({
+      ...prev,
+      selectedOption: optionId,
+    }));
+  };
+
+  const handleNext = () => {
+    if (quizState.currentQuestion < quizState.totalQuestions - 1) {
+      setQuizState((prev) => ({
+        ...prev,
+        currentQuestion: prev.currentQuestion + 1,
+        selectedOption: null,
+      }));
+    } else {
+      // Quiz completed
+      console.log('Quiz completed!');
+    }
+  };
+
+  const handleBack = () => {
+    if (quizState.currentQuestion > 0) {
+      setQuizState((prev) => ({
+        ...prev,
+        currentQuestion: prev.currentQuestion - 1,
+        selectedOption: null,
+      }));
+    }
+  };
+
+  return (
+    <QuizScreen
+      quizState={quizState}
+      onSelectOption={handleSelectOption}
+      onNext={handleNext}
+      onBack={handleBack}
+    />
+  );
+};
+
+export default App;
